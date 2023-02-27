@@ -6,7 +6,7 @@ include('../src/bootstrap.php');
 require('../src/config.php');
 require '../actions/users/userdefinition.php';
 
-entete('');
+entete('Comptabilité bénévoles','Comptabilité bénévoles','4');
  
  if(isset($_POST['ok'])):
   foreach($_POST['habilitation'] as $k=>$v):
