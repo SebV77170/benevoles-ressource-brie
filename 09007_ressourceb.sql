@@ -2,10 +2,10 @@
 -- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
--- Hôte : 10.0.20.8
--- Généré le : mar. 07 fév. 2023 à 09:34
--- Version du serveur : 10.3.27-MariaDB-1:10.3.27+maria~stretch-log
--- Version de PHP : 7.4.30
+-- Hôte : 127.0.0.1
+-- Généré le : mer. 01 mars 2023 à 11:32
+-- Version du serveur : 10.4.22-MariaDB
+-- Version de PHP : 8.0.15
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de données : `09007_ressourceb`
+-- Base de données : `brie`
 --
 
 -- --------------------------------------------------------
@@ -34,6 +34,13 @@ CREATE TABLE `admin` (
   `login` varchar(10) NOT NULL,
   `pass` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Déchargement des données de la table `admin`
+--
+
+INSERT INTO `admin` (`id`, `prenom`, `nom`, `login`, `pass`) VALUES
+(1, 'test', 'test', 'test', 'test');
 
 -- --------------------------------------------------------
 
@@ -102,6 +109,17 @@ CREATE TABLE `date_users` (
   `date_prochain_creneau` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Déchargement des données de la table `date_users`
+--
+
+INSERT INTO `date_users` (`id_date`, `id_user`, `date_inscription`, `date_derniere_visite`, `date_dernier_creneau`, `date_prochain_creneau`) VALUES
+(1, 1, '2023-02-07 17:40:00', '2023-02-09 09:21:00', NULL, NULL),
+(2, 2, '2023-02-08 14:50:00', '2023-02-08 14:50:00', NULL, NULL),
+(3, 3, '2023-02-09 10:32:00', '2023-03-01 11:21:00', NULL, NULL),
+(4, 4, '2023-02-09 12:06:00', '2023-02-28 17:55:00', NULL, NULL),
+(5, 5, '2023-02-28 18:35:00', '2023-02-28 18:35:00', NULL, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -117,6 +135,14 @@ CREATE TABLE `events` (
   `end` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Déchargement des données de la table `events`
+--
+
+INSERT INTO `events` (`id`, `cat_creneau`, `name`, `description`, `start`, `end`) VALUES
+(3, 1, 'test2', '', '2022-03-02 13:58:00', '2022-03-02 15:58:00'),
+(7, 1, 'test3', '', '2023-03-16 12:00:00', '2023-03-16 14:00:00');
+
 -- --------------------------------------------------------
 
 --
@@ -128,6 +154,13 @@ CREATE TABLE `fonction` (
   `fonction` varchar(255) NOT NULL,
   `description` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Déchargement des données de la table `fonction`
+--
+
+INSERT INTO `fonction` (`id`, `fonction`, `description`) VALUES
+(1, 'tester', 'tester');
 
 -- --------------------------------------------------------
 
@@ -141,6 +174,22 @@ CREATE TABLE `inscription_creneau` (
   `id_event` int(11) NOT NULL,
   `fonction` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Déchargement des données de la table `inscription_creneau`
+--
+
+INSERT INTO `inscription_creneau` (`id_inscription`, `id_user`, `id_event`, `fonction`) VALUES
+(2, 3, 3, 'tester'),
+(3, 4, 3, 'tester'),
+(4, 3, 5, 'tester'),
+(5, 3, 6, 'tester'),
+(6, 3, 5, 'tester'),
+(7, 3, 6, 'tester'),
+(9, 4, 7, 'tester'),
+(11, 5, 9, 'tester'),
+(12, 3, 7, 'tester'),
+(13, 5, 7, 'N/A');
 
 -- --------------------------------------------------------
 
@@ -300,6 +349,14 @@ CREATE TABLE `users` (
   `tel` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Déchargement des données de la table `users`
+--
+
+INSERT INTO `users` (`id`, `prenom`, `nom`, `pseudo`, `password`, `admin`, `mail`, `tel`) VALUES
+(3, 'test', 'test', 'test', '$2y$10$6dHioE/yVOfFenoyZWHV/ux3PmgLFDZw/9BYjoYiWeCqiEu5xRaMa', 2, NULL, NULL),
+(5, 'test3', 'test3', 'test3', '$2y$10$q3tHQfKNyrwnLAtr835FseVodAe0951LjGljh0X2hWN1TbIqyf2km', 2, NULL, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -439,7 +496,7 @@ ALTER TABLE `vente`
 -- AUTO_INCREMENT pour la table `admin`
 --
 ALTER TABLE `admin`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `article_accueil`
@@ -469,25 +526,25 @@ ALTER TABLE `client`
 -- AUTO_INCREMENT pour la table `date_users`
 --
 ALTER TABLE `date_users`
-  MODIFY `id_date` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_date` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT pour la table `events`
 --
 ALTER TABLE `events`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT pour la table `fonction`
 --
 ALTER TABLE `fonction`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `inscription_creneau`
 --
 ALTER TABLE `inscription_creneau`
-  MODIFY `id_inscription` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_inscription` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT pour la table `membres`
@@ -541,7 +598,7 @@ ALTER TABLE `ticketdecaissetemp`
 -- AUTO_INCREMENT pour la table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT pour la table `vente`
@@ -549,6 +606,18 @@ ALTER TABLE `users`
 ALTER TABLE `vente`
   MODIFY `id_temp_vente` int(11) NOT NULL AUTO_INCREMENT;
 COMMIT;
+
+--
+--requ�te pour la somme de la dur�� des cr�neaux sur lesquels se sont inscrits les benevoles
+--
+
+SELECT USERS.nom,USERS.prenom,USERS.pseudo,SUM(TIMESTAMPDIFF(MINUTE,EVENTS.start,EVENTS.end)) DIV 60 as Heuretotal
+    FROM EVENTS
+     JOIN INSCRIPTION_CRENEAU ON INSCRIPTION_CRENEAU.id_event=EVENTS.id
+     JOIN USERS ON USERS.id=INSCRIPTION_CRENEAU.id_user
+     where YEAR(EVENTS.start) = YEAR(CURDATE()) and YEAR(EVENTS.end) = YEAR(CURDATE())
+    GROUP BY INSCRIPTION_CRENEAU.id_user; 
+
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
