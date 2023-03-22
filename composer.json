@@ -1,0 +1,16 @@
+{
+    "name": "jonathan/tuto-calendar",
+    "authors": [
+        {
+            "name": "Jonathan",
+            "email": "contact@grafikart.fr"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Calendar\\": "src/Calendar",
+            "App\\": "src/App"
+        }
+    },
+    "require": {}
+}
