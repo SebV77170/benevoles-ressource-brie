@@ -25,6 +25,7 @@ function get_pdo (): PDO {
     ]);
 }
 
+
 function h(?string $value): string {
     if ($value === null) {
         return '';

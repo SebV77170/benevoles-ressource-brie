@@ -235,7 +235,7 @@ class Users {
         $sth=$this->pdo->prepare($sql);
         $sth->execute(array($this->id));
     }
-    
+
     public function updateTelUser($tel){
         $tel=htmlspecialchars($tel);
         $sql='UPDATE users SET tel = "'.$tel.'" WHERE id = ?';

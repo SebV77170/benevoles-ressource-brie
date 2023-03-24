@@ -28,6 +28,10 @@ entete('Signup','Signup','0');
                     <label for="pseudo" class="form-label">Pseudo : </label>
                     <input type="text" name="pseudo" class="form-control">
                     </div>
+                    <div class="mb-3 w-25 m-auto">
+                    <label for="mail" class="form-label">Email : </label>
+                    <input type="text" name="mail" class="form-control">
+                    </div>
                     
                     <div class="mb-3 w-25 m-auto">
                     <label for="password" class="form-label">Mot de passe : </label>

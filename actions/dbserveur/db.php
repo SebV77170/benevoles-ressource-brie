@@ -1,6 +1,6 @@
 <?php
             $dbname = "09007_ressourceb";
-            $serveur = "sql01.ouvaton.coop";
+            $serveur ="sql01.ouvaton.coop";
             $login = "09007_ressourceb";
             $pass = "LaRessourcerieDeBrie77170!";
             

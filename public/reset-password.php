@@ -68,25 +68,27 @@ include_once('../actions/db.php');
   echo "<script>console.log('Debug Objects: " . $output . "' );</script>";
 }*/
 
+
 if(isset($_REQUEST['pwdrst']))
 {
   $email = base64_decode($_GET['secret']);
-  $pwd = md5($_REQUEST['pwd']);
-  $cpwd = md5($_REQUEST['cpwd']);
+  $pwd = password_hash($_REQUEST['pwd'], PASSWORD_DEFAULT);
+  $cpwd = $_REQUEST['cpwd'];
+
 
   //debug_to_console(  ' ' . $email);
 
-  if($pwd == $cpwd)
+  if(password_verify($cpwd,$pwd))
   {
     $query="UPDATE users SET password='$pwd' WHERE pseudo='$email'";
     $reset_pwd = $db->prepare($query);
     $reset_pwd->execute();
-    
+  
     //debug_to_console(  ' ' . $pwd);
   
     if($reset_pwd)
     {
-      $msg= 'Votre mot de passe a été modifié avec succès <a href="login.php"> Cliquez ici</a> pour se connecter';
+      $msg1= 'Votre mot de passe a été modifié avec succès <a href="login.php"> Cliquez ici</a> pour se connecter';
     }
     else
     {
@@ -135,6 +137,21 @@ if($_GET['secret'])
      </div>
    </div>  
   </div>
+  <?php if(isset($msg)):
+  ?>
+  <div class="alert alert-danger" role="alert">
+    <?=$msg;?>
+  </div>
+  <?php
+  endif;
+  if(isset($msg1)):
+  ?>
+  <div class="alert alert-success" role="alert">
+    <?=$msg1;?>
+  </div>
+  <?php
+  endif;
+  ?>
   <?php } } ?> 
 </body>
 </html>

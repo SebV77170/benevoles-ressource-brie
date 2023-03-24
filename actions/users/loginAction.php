@@ -40,7 +40,7 @@ require('../actions/db.php');
                     
                     $sql = 'UPDATE date_users SET date_derniere_visite = ? WHERE id_user = '.$usersInfos['id'].'';
                     $sth = $db->prepare($sql);
-                    $sth -> execute(array($date_visite));
+                    $sth -> execute(array($date_visite)); 
                     
                     //Authentifier l'utilisateur sur le site et récupérer ses données dans des variables session.
                 
