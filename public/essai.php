@@ -10,11 +10,21 @@ $users = new App\Admins($_SESSION, $pdo);
 
 $Creneau = new Calendar\Creneaux($pdo,$timezone);
 
+$start = new \DateTime("14:00");
+$end = new \DateTime("18:00");
 
-$check = $users->getAllUsersAndDateWaiting();
+$starttimestamp = $start->format('U');
+$endtimestamp = $end->format('U');
+
+$result = ($endtimestamp - $starttimestamp)/4;
+
+$souscren1timestamp = $starttimestamp + $result;
+
+$souscren1 = new \DateTime();
+$souscren1 = $souscren1->setTimestamp($souscren1timestamp);
 
 
-dd($check);
+dd($souscren1, $start, $end);
 
 
 
