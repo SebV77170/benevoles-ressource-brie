@@ -163,11 +163,32 @@ class Creneaux {
 
             $endsouscren = new \DateTime($implode3, $timezone);
 
-            $newdata[][0]=[$startcren, $endcren];
-            $newdata[][1]=[$startsouscren, $endsouscren];
+            $newdata[][0]=[$startcren, $endcren, 'nom'=>$data['nom']];
+            $newdata[][1]=[$startsouscren, $endsouscren, 'nom'=>$data['nom']];
+            
         endforeach;
 
         return $newdata;
+    }
+
+    public function TransformArray2(array $data):array{
+        $timezone = $this->timezone;
+
+        // Format fr => format us
+        $format_fr = $data['jour'];
+        $format_us = implode('-',array_reverse  (explode('-',$format_fr)));
+        $jour=$format_us;
+        $jourheuredebut = implode(" ",[$jour,$data['opening']]);
+        $jourheurefin = implode(" ",[$jour,$data['closing']]);
+
+        $start = new \DateTime($jourheuredebut,$timezone);
+        $end = new \DateTime($jourheurefin, $timezone);
+
+        $cren=[$start,$end];
+
+        $completedata = $this->spitCreneauIntoSousCreneau($cren, $data['souscren']);
+
+        return $completedata;
     }
     
     public function CheckIfCreneauExist(string $timestart, string $timeend){
@@ -192,12 +213,12 @@ class Creneaux {
 
     public function insertCreneau(array $data, int $cat){
         
-        $name = 'Ouverture standard';
         $description = '';
         foreach($data as $clef=>$valeur){
             
             $start = $valeur[0]->format('Y/m/d G:i');
             $end = $valeur[1]->format('Y/m/d G:i');
+            $name = $valeur['nom'];
             
             if(!($this ->CheckIfCreneauExist($start,$end))){
             $sql1 = 'INSERT into events (cat_creneau, name, description, start, end) VALUES (?,?,?,?,?)';
