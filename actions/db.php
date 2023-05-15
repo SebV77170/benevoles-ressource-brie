@@ -1,8 +1,8 @@
 <?php
-            $dbname = "objets";
-            $serveur = "localhost";
-            $login = "root";
-            $pass = "root";
+            $dbname = /*"brie";*/"objets";
+            $serveur = /*"127.0.0.1";*/"localhost";
+            $login = /*"root";*/ "root";
+            $pass = /*"";*/ "root";
             
             try{
                         $db = new PDO("mysql:host=$serveur;dbname=$dbname;charset=utf8;", $login, $pass);
@@ -12,5 +12,5 @@
             catch(Exception $e){
                         die('Une erreur a été trouvée : '.$e->getMessage());
             }
-            
-?>
+  
+        ?>

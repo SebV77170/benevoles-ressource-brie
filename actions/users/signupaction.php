@@ -7,9 +7,9 @@ require('../actions/db.php');
 
     if(isset($_POST['validate'])){
         
-        //Vérifier si l'user à bien compléter tous les champs
+        //Vérifier si l'user a bien compléter tous les champs
     
-        if(!empty($_POST['prenom']) AND !empty($_POST['nom']) AND !empty($_POST['pseudo']) AND !empty($_POST['password'])){
+        if(!empty($_POST['prenom']) AND !empty($_POST['nom']) AND !empty($_POST['pseudo']) AND !empty($_POST['mail']) AND !empty($_POST['password'])){
         
             //Les données de l'user
             $date = new \DateTime('now',new \DateTimeZone('Europe/Paris'));
@@ -21,6 +21,7 @@ require('../actions/db.php');
             $user_prenom = htmlspecialchars($_POST['prenom']);
             $user_nom = htmlspecialchars($_POST['nom']);
             $user_pseudo = htmlspecialchars($_POST['pseudo']);
+            $user_email = htmlspecialchars($_POST['mail']);
             $user_password = password_hash($_POST['password'], PASSWORD_DEFAULT);
             $user_admin = 0;
             
@@ -33,13 +34,13 @@ require('../actions/db.php');
                 
                 //Insérer l'utilisateur dans la BDD
                 
-                $insertUserOnWebsite = $db->prepare('INSERT INTO users(prenom, nom, pseudo, password, admin)VALUES(?,?,?,?,?)');
-                $insertUserOnWebsite->execute(array($user_prenom, $user_nom, $user_pseudo, $user_password, $user_admin));
+                $insertUserOnWebsite = $db->prepare('INSERT INTO users(prenom, nom, pseudo, mail, password, admin)VALUES(?,?,?,?,?,?)');
+                $insertUserOnWebsite->execute(array($user_prenom, $user_nom, $user_pseudo,$user_email, $user_password, $user_admin));
                 
                 //Récupérer les informations de l'utilisateur
                 
-                $GetInfoOfThisUserReq = $db->prepare('SELECT * FROM users WHERE nom = ? AND prenom = ? AND pseudo = ?');
-                $GetInfoOfThisUserReq->execute(array($user_nom, $user_prenom, $user_pseudo));
+                $GetInfoOfThisUserReq = $db->prepare('SELECT * FROM users WHERE nom = ? AND prenom = ? AND pseudo = ?  AND mail = ?');
+                $GetInfoOfThisUserReq->execute(array($user_nom, $user_prenom, $user_pseudo,$user_email));
                 
                 $usersInfos = $GetInfoOfThisUserReq->fetch();
                 

@@ -25,8 +25,8 @@ entete('Login','Login','0');
                     
                     <button type="submit" name="validate" class="stdbouton">Connexion</button>
             </form>
-                
-        <a href="signup.php" style="color: black"><p>Je n'ai pas encore de compte, je m'inscris ici !</p></a>
+        <p class="link"><a href="motdepasseoubli.php">Mot de passe oublié?</a></p>     
+        <p class="link"><a href="signup.php">Je n'ai pas encore de compte, je m'inscris ici !</p></a>
                           
        
 </div> 
