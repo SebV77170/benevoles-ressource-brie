@@ -140,6 +140,11 @@ input[type="submit"]:hover{
     background-color: #23A3D9;
 }
 
+#bleu_twolines{
+    width: 100%;
+    background-color: #23A3D9;
+}
+
 #bleu:hover{
     background-color: #26A648;
 }

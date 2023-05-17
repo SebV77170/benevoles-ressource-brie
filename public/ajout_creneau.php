@@ -8,8 +8,6 @@ entete('Administration','Administration','4');
 
 $jour=new Calendar\Creneaux($pdo,$timezone);
 
-dd($_POST);
-
 if(isset($_POST['validate'])):
   if(!empty($_POST['jour']) AND 
      !empty($_POST['opening']) AND
