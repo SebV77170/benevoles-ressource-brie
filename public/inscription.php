@@ -69,8 +69,9 @@ $samedi = $creneau -> getCreneauByDay('Saturday');
 
 
 <h2 class='text-center'>Cochez les créneaux sur lesquels vous voulez vous inscrire sur les 3 prochains mois, puis cliquez sur s'inscrire</h2>
-
-
+<div class='container'>
+  <div class="h2 alert alert-success text-center" role="alert">Cette année, la ressourcerie fermera ses portes du 31/07 au 20/08 inclus. Nous ferons tous une petite pause estivale pour faire le plein d'énergie pour la suite de l'année :-). Encore une fois, merci à tous !</div>
+</div>
 
 <div class="container bg-light rounded mt-4">
     <form method='post'>

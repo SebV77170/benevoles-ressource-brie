@@ -38,7 +38,6 @@ if(isset($_POST['insert'])):
   
   foreach($newlistdate as $key=>$value):
     foreach($value as $k=>$v):
-      dd($value);
       $insert=$jour->insertCreneau($value, $k);
     endforeach;
   endforeach;
@@ -331,22 +330,27 @@ if(isset($_POST['validate']) AND !isset($error)):
         <table class="table table-striped">
           <tbody>
           <?php
+      
           foreach($listdate as $key=>$value): 
-            foreach($completelistdate as $k=>$v):
-              foreach($v[2] as $k1=>$v1):
-                ?>
-                <tr>
-                  <td>
-                    <input class="form-check-input" type="checkbox" name="listdate[]" value="<?=$v[0]->format('Y-m-d G:i')?> / <?=$v[1]->format('G:i')?> / <?= $v1[0]->format('G:i')?> - <?= $v1[1]->format('G:i')?>" id="flexCheckChecked" checked>
-                  </td>
-                  <td>
-                    <?=$key?> - <?= $v[0]->format('d/m')?>
-                  </td>
-                  <td>
-                    <?= $v1[0]->format('G:i')?> - <?= $v1[1]->format('G:i')?>
-                  </td>
-                </tr>
-                <?php 
+            foreach($value as $key1=>$value1):
+              foreach($completelistdate as $k=>$v):
+                if($value1[0]==$v[0]):
+                  foreach($v[2] as $k1=>$v1):
+                    ?>
+                    <tr>
+                      <td>
+                        <input class="form-check-input" type="checkbox" name="listdate[]" value="<?=$v[0]->format('Y-m-d G:i')?> / <?=$v[1]->format('G:i')?> / <?= $v1[0]->format('G:i')?> - <?= $v1[1]->format('G:i')?>" id="flexCheckChecked" checked>
+                      </td>
+                      <td>
+                        <?=$key?> - <?= $v[0]->format('d/m')?>
+                      </td>
+                      <td>
+                        <?= $v1[0]->format('G:i')?> - <?= $v1[1]->format('G:i')?>
+                      </td>
+                    </tr>
+                    <?php 
+                  endforeach;
+                endif;
               endforeach;
             endforeach;
           endforeach;
