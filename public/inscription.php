@@ -48,6 +48,7 @@ $creneauUser = $users -> getCreneauUser();
 endif;
 
 $lundi = $creneau -> getCreneauByDay('Monday');
+$mardi = $creneau -> getCreneauByDay('Tuesday');
 $jeudi = $creneau -> getCreneauByDay('Thursday');
 $samedi = $creneau -> getCreneauByDay('Saturday');
 
@@ -70,7 +71,10 @@ $samedi = $creneau -> getCreneauByDay('Saturday');
 
 <h2 class='text-center'>Cochez les créneaux sur lesquels vous voulez vous inscrire sur les 3 prochains mois, puis cliquez sur s'inscrire</h2>
 <div class='container'>
-  <div class="h2 alert alert-success text-center" role="alert">Cette année, la ressourcerie fermera ses portes du 31/07 au 20/08 inclus. Nous ferons tous une petite pause estivale pour faire le plein d'énergie pour la suite de l'année :-). Encore une fois, merci à tous !</div>
+  <div class="h2 alert alert-success text-center" role="alert">Attention, depuis Septembre, des créneaux toutes les semaines sont disponibles.</div>
+  <div class="h2 alert alert-warning text-center" role="alert">En étant bénévole à la ressourcerie, je m'engage à respecter les statuts, ainsi que le règlement intérieur.
+</div>
+
 </div>
 
 <div class="container bg-light rounded mt-4">
@@ -82,6 +86,57 @@ $samedi = $creneau -> getCreneauByDay('Saturday');
       <hr>
       <?php
             Foreach($lundi as $v){
+                
+      ?>
+      <div class="form-check">
+        
+            <?php if(!($creneau -> CheckIfCreneauOutOfDate($v['end']))){
+                
+                    if($users -> checkIfCreneauExist($v['id'])){
+                        ?>    
+                        <input class="form-check-input" type="checkbox" name='id_event[]' value="<?php echo $v['id']?>" id="flexCheckDisabled" disabled>
+                        <label class="form-check-label" for="flexCheckDisabled">
+                          <?php
+                          echo $creneau -> explodeDateInDb(''.$v['start'].'');
+                          echo ' ';
+                          echo $creneau -> explodeHeureInDb(''.$v['start'].'');
+                          echo ' ';
+                          echo $creneau -> explodeHeureInDb(''.$v['end'].'');
+                          ?>
+                        </label>
+                          <?php
+                        }else{
+                            ?>
+                        <input class="form-check-input" type="checkbox" name='id_event[]' value="<?php echo $v['id']?>" id="flexCheckDefault" >
+                        <label class="form-check-label" for="flexCheckDefault">
+                          <?php
+                          echo $creneau -> explodeDateInDb(''.$v['start'].'');
+                          echo ' ';
+                          echo $creneau -> explodeHeureInDb(''.$v['start'].'');
+                          echo ' ';
+                          echo $creneau -> explodeHeureInDb(''.$v['end'].'');
+                          ?>
+                </label>
+                <?php
+                }
+                
+            }else{
+                
+            }
+            ?>    
+      
+      </div>
+          
+      <?php 
+        }
+      ?>
+        
+    </div>
+    <div class="col">
+      <h3>Mardi</h3>
+      <hr>
+      <?php
+            Foreach($mardi as $v){
                 
       ?>
       <div class="form-check">

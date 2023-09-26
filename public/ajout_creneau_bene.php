@@ -60,6 +60,7 @@ if(isset($admin)):
  
   
   $lundi = $creneau -> getCreneauByDay('Monday');
+  $mardi = $creneau -> getCreneauByDay('Tuesday');
   $jeudi = $creneau -> getCreneauByDay('Thursday');
   $samedi = $creneau -> getCreneauByDay('Saturday');
   
@@ -121,6 +122,57 @@ if(isset($admin)):
               <?php if(!($creneau -> CheckIfCreneauOutOfDate($v['end']))){
                   
                       if($benevole -> checkIfCreneauExist($v['id'])){
+                          ?>    
+                          <input class="form-check-input" type="checkbox" name='id_event[]' value="<?php echo $v['id']?>" id="flexCheckDisabled" disabled>
+                          <label class="form-check-label" for="flexCheckDisabled">
+                            <?php
+                            echo $creneau -> explodeDateInDb(''.$v['start'].'');
+                            echo ' ';
+                            echo $creneau -> explodeHeureInDb(''.$v['start'].'');
+                            echo ' ';
+                            echo $creneau -> explodeHeureInDb(''.$v['end'].'');
+                            ?>
+                          </label>
+                            <?php
+                          }else{
+                              ?>
+                          <input class="form-check-input" type="checkbox" name='id_event[]' value="<?php echo $v['id']?>" id="flexCheckDefault" >
+                          <label class="form-check-label" for="flexCheckDefault">
+                            <?php
+                            echo $creneau -> explodeDateInDb(''.$v['start'].'');
+                            echo ' ';
+                            echo $creneau -> explodeHeureInDb(''.$v['start'].'');
+                            echo ' ';
+                            echo $creneau -> explodeHeureInDb(''.$v['end'].'');
+                            ?>
+                  </label>
+                  <?php
+                  }
+                  
+              }else{
+                  
+              }
+              ?>    
+        
+        </div>
+            
+        <?php 
+          }
+        ?>
+          
+      </div>
+      <div class="col">
+        <h3>Mardi</h3>
+        <hr>
+        <?php
+              Foreach($mardi as $v){
+                  
+        ?>
+        <div class="form-check">
+          
+              <?php if(!($creneau -> CheckIfCreneauOutOfDate($v['end']))){
+                  
+                      if($users -> checkIfCreneauExist($v['id'])){
                           ?>    
                           <input class="form-check-input" type="checkbox" name='id_event[]' value="<?php echo $v['id']?>" id="flexCheckDisabled" disabled>
                           <label class="form-check-label" for="flexCheckDisabled">
