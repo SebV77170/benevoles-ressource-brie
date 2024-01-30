@@ -75,9 +75,9 @@ entete('Calendrier','Calendrier des créneaux','1');
                     <?php $usersByCreneau = $users->getAllUsersByCreneau2($eventsslotForDay);
                       $count = $users->countAllUsersByCreneau($usersByCreneau);
                       
-                          if(min($count)<=2){
+                          if(min($count)<=3){
                             $colorlight = 'rouge';
-                          }elseif(min($count)==3){
+                          }elseif(min($count)>3 AND min($count)<=7){
                             $colorlight = 'jaune';
                           }else{
                             $colorlight = 'vert';
