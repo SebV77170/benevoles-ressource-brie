@@ -1,4 +1,4 @@
 <?php
 if(!isset($_SESSION['auth'])){
-    header('location: /public/login.php');
+        header('location:http://localhost:8888/benevoles-ressource-brie/public/login.php');
 }

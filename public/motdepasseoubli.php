@@ -87,7 +87,7 @@ if(isset($_REQUEST['pwdrst']))
       <p><b>Bonjour!</b></p>
       <p>Vous recevez cet e-mail car nous avons reçu une demande de réinitialisation du mot de passe pour votre compte.</p>
       <br>
-      <p><button class="btn btn-primary"><a href="http://benevoles-ressource-brie/public/reset-password.php?secret='.base64_encode($pseudo).'">Cliquer ici pour reinitialiser votre mot de passe</a></button></p>
+      <p><button class="btn btn-primary"><a href="http://benevoles.ressourcebrie.fr/public/reset-password.php?secret='.base64_encode($pseudo).'">Cliquer ici pour reinitialiser votre mot de passe</a></button></p>
       <br>
       </div>';
     endif;
@@ -103,10 +103,10 @@ $mail->SMTPAuth = true;
 $mail->SMTPSecure = "ssl";  //ssl    
 $mail->Host='smtp.ouvaton.coop';
 $mail->Port = 465; 
-$mail->Username = 'contact@ressourcebrie.fr';   //Entrez votre email
-$mail->Password = 'RessourceB77!';   //Entrez votre mot de passe
+$mail->Username = 'president@ressourcebrie.fr';   //Entrez votre email
+$mail->Password = 'President7#';   //Entrez votre mot de passe
 $mail->FromName = "ressourcebrie";
-$mail->From='contact@ressourcebrie.fr'; //Re-entrez votre email
+$mail->From='president@ressourcebrie.fr'; //Re-entrez votre email
 $mail->AddAddress($email);
 $mail->Subject = "Réinitialisation du Mot de passe";
 $mail->isHTML( TRUE );
