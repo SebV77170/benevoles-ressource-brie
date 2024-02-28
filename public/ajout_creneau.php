@@ -17,7 +17,9 @@ if(isset($_POST['validate'])):
      !empty($_POST['souscren']) AND 
      !empty($_POST['frequency']) AND 
      !empty($_POST['timing']) AND 
+     !empty($_POST['public']) AND
      !empty($_POST['nom'])):
+     dd($_POST['jour']);
     foreach($_POST['jour'] as $k=>$v):
       ${"listdate".$v}=$jour->findNewCreneau($v,$_POST['opening'],$_POST['closing'],$_POST['timing'],$_POST['frequency']);
       $listdate[$jour->tranlateday($v)]=${"listdate".$v};
@@ -59,7 +61,7 @@ if(isset($_POST['validateday'])):
   endif; 
 endif;
 
-
+dd($_POST);
 
 
 ?>
@@ -177,6 +179,19 @@ if($_SESSION['admin'] >= 0){
             </div>
             <div class="row">
               <div class="col-4">
+                <h2>Ouvert au public ?</h2>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="public" value="1" id="flexCheckDefault">
+                  <label class="form-check-label" for="flexCheckDefault">
+                    Oui
+                  </label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="public" value="0" id="flexCheckDefault">
+                  <label class="form-check-label" for="flexCheckDefault">
+                    Non
+                  </label>
+                </div>
               </div>
               <div class="col-4">
               <h2>Combien de sous-créneaux ?</h2>
