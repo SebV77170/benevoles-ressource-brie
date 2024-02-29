@@ -33,9 +33,6 @@ if(isset($_POST['validate'])):
   endif;
 endif;
 
-dd($_POST);
-
-
 if(isset($_POST['insert'])):
   $newlistdate = $jour->TransformArray($_POST);
   
