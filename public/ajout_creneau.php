@@ -17,9 +17,8 @@ if(isset($_POST['validate'])):
      !empty($_POST['souscren']) AND 
      !empty($_POST['frequency']) AND 
      !empty($_POST['timing']) AND 
-     !empty($_POST['public']) AND
+     isset($_POST['public']) AND
      !empty($_POST['nom'])):
-     dd($_POST['jour']);
     foreach($_POST['jour'] as $k=>$v):
       ${"listdate".$v}=$jour->findNewCreneau($v,$_POST['opening'],$_POST['closing'],$_POST['timing'],$_POST['frequency']);
       $listdate[$jour->tranlateday($v)]=${"listdate".$v};
@@ -34,13 +33,15 @@ if(isset($_POST['validate'])):
   endif;
 endif;
 
+dd($_POST);
+
 
 if(isset($_POST['insert'])):
   $newlistdate = $jour->TransformArray($_POST);
   
   foreach($newlistdate as $key=>$value):
     foreach($value as $k=>$v):
-      $insert=$jour->insertCreneau($value, $k);
+      $insert=$jour->insertCreneau($value, $k, $_POST['public']);
     endforeach;
   endforeach;
 
@@ -61,7 +62,7 @@ if(isset($_POST['validateday'])):
   endif; 
 endif;
 
-dd($_POST);
+
 
 
 ?>
@@ -337,6 +338,7 @@ if(isset($_POST['validate']) AND !isset($error)):
 ?>
 <form method="post">
   <input type="hidden" value=<?=$_POST['nom']?> name="nom">
+  <input type="hidden" value=<?=$_POST['public']?> name="public">
   <div class="container">
     <div class="row">
       <div class="col-3">
@@ -354,7 +356,7 @@ if(isset($_POST['validate']) AND !isset($error)):
                     ?>
                     <tr>
                       <td>
-                        <input class="form-check-input" type="checkbox" name="listdate[]" value="<?=$v[0]?>format('Y-m-d G:i')?> / <?=$v[1]->format('G:i')?> / <?= $v1[0]->format('G:i')?> - <?= $v1[1]->format('G:i')?>" id="flexCheckChecked" checked>
+                        <input class="form-check-input" type="checkbox" name="listdate[]" value="<?=$v[0]->format('Y-m-d G:i')?> / <?=$v[1]->format('G:i')?> / <?= $v1[0]->format('G:i')?> - <?= $v1[1]->format('G:i')?>" id="flexCheckChecked" checked>
                       </td>
                       <td>
                         <?=$key?> - <?= $v[0]->format('d/m')?>
@@ -398,6 +400,7 @@ if(isset($_POST['validateday']) AND !isset($error)):
 ?>
 <form method="post">
   <input type="hidden" value=<?=$_POST['nom']?> name="nom">
+  <input type="hidden" value=<?=$_POST['public']?> name="public">
   <div class="container">
     <div class="row">
       <div class="col-3">

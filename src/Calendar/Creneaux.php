@@ -211,7 +211,7 @@ class Creneaux {
     
 //Insere les créneau dans la db
 
-    public function insertCreneau(array $data, int $cat){
+    public function insertCreneau(array $data, int $cat, int $public){
         
         $description = '';
         foreach($data as $clef=>$valeur){
@@ -221,9 +221,21 @@ class Creneaux {
             $name = $valeur['nom'];
             
             if(!($this ->CheckIfCreneauExist($start,$end))){
-            $sql1 = 'INSERT into events (cat_creneau, name, description, start, end) VALUES (?,?,?,?,?)';
-            $sth1 = $this ->pdo-> prepare($sql1);
-            $sth1 -> execute(array($cat, $name, $description, $start, $end));
+                if($public==1):
+                    if($cat==0):
+                        $sql1 = 'INSERT into events (cat_creneau, name, description, start, end, public) VALUES (?,?,?,?,?,?)';
+                        $sth1 = $this ->pdo-> prepare($sql1);
+                        $sth1 -> execute(array($cat, $name, $description, $start, $end, $public));
+                    else:
+                        $sql1 = 'INSERT into events (cat_creneau, name, description, start, end, public) VALUES (?,?,?,?,?,?)';
+                        $sth1 = $this ->pdo-> prepare($sql1);
+                        $sth1 -> execute(array($cat, $name, $description, $start, $end, 0));
+                    endif;
+                else:
+                    $sql1 = 'INSERT into events (cat_creneau, name, description, start, end, public) VALUES (?,?,?,?,?,?)';
+                    $sth1 = $this ->pdo-> prepare($sql1);
+                    $sth1 -> execute(array($cat, $name, $description, $start, $end, 0));
+                endif;
             }
         }   
     }
