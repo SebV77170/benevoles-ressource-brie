@@ -339,7 +339,7 @@ if(isset($_POST['validate']) AND !isset($error)):
                     ?>
                     <tr>
                       <td>
-                        <input class="form-check-input" type="checkbox" name="listdate[]" value="<?=$v[0]?>format('Y-m-d G:i')?> / <?=$v[1]->format('G:i')?> / <?= $v1[0]->format('G:i')?> - <?= $v1[1]->format('G:i')?>" id="flexCheckChecked" checked>
+                        <input class="form-check-input" type="checkbox" name="listdate[]" value="<?=$v[0]->format('Y-m-d G:i')?> / <?=$v[1]->format('G:i')?> / <?= $v1[0]->format('G:i')?> - <?= $v1[1]->format('G:i')?>" id="flexCheckChecked" checked>
                       </td>
                       <td>
                         <?=$key?> - <?= $v[0]->format('d/m')?>
