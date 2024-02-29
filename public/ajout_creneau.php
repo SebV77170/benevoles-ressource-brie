@@ -63,9 +63,6 @@ if(isset($_POST['validateday'])):
   endif; 
 endif;
 
-
-
-
 ?>
 
 <?php
