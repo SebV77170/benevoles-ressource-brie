@@ -55,6 +55,7 @@ if(isset($_POST['validateday'])):
      !empty($_POST['closing']) AND 
      $_POST['closing']<>'Choisissez l\'heure de fermeture' AND
      !empty($_POST['souscren']) AND 
+     isset($_POST['public']) AND
      !empty($_POST['nom'])):
     $completelistdate=$jour->transformArray2($_POST);
   else:
@@ -280,6 +281,19 @@ if($_SESSION['admin'] >= 0){
               </div>
               <div class="row">
                 <div class="col-4">
+                  <h2>Ouvert au public ?</h2>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="public" value="1" id="flexCheckDefault">
+                    <label class="form-check-label" for="flexCheckDefault">
+                      Oui
+                    </label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="public" value="0" id="flexCheckDefault">
+                    <label class="form-check-label" for="flexCheckDefault">
+                      Non
+                    </label>
+                  </div>
                 </div>
                 <div class="col-4">
                   <h2>Combien de sous-créneaux ?</h2>
