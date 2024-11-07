@@ -2,7 +2,7 @@
             $dbname = /*"brie";*/"objets";
             $serveur = /*"127.0.0.1";*/"localhost";
             $login = /*"root";*/ "root";
-            $pass = /*"";*/ "root";
+            $pass = /*"";*/ "";
             
             try{
                         $db = new PDO("mysql:host=$serveur;dbname=$dbname;charset=utf8;", $login, $pass);

@@ -19,10 +19,6 @@ $end = (clone $start)->modify('+' . (6 + 7 * ($weeks -1)) . ' days');
 $events = $events->getEventsBetweenByDay($start, $end, 0);
 $eventsslots = $eventsslots->getEventsBetweenByDay($start, $end, 1);
 
-
-
-
-
 entete('Calendrier','Calendrier des créneaux','1');
 
 ?>
@@ -62,27 +58,34 @@ entete('Calendrier','Calendrier des créneaux','1');
                     <div class="calendar__weekday"><?= $day; ?></div>
                   <?php endif; ?>
                   
-                  
+           
                 <a class="calendar__day" <?php  if(isset($admin)){?>href="add.php?date=<?= $date->format('Y-m-d'); ?><?php }else{echo 'href="#"';} ?>"><?= $date->format('d'); ?></a>
                   
                 
                 
-                  <?php foreach($eventsForDay as $event): ?>
+                  <?php foreach($eventsForDay as $event): 
+                    
+                    
+                    ?>
                     <div class="calendar__event">
                         <?= (new DateTime($event['start']))->format('H:i') ?> - <?= (new DateTime($event['end']))->format('H:i') ?> <a href="edit.php?id=<?= $event['id']; ?>"><?= h($event['name']); ?></a>
                         
                     </div>
-                    <?php $usersByCreneau = $users->getAllUsersByCreneau2($eventsslotForDay);
-                      $count = $users->countAllUsersByCreneau($usersByCreneau);
-                      
-                          if(min($count)<=3){
-                            $colorlight = 'rouge';
-                          }elseif(min($count)>3 AND min($count)<=7){
-                            $colorlight = 'jaune';
-                          }else{
-                            $colorlight = 'vert';
-                          }
+
+                    <?php 
+                    
+                        $usersByCreneau = $users->getAllUsersByCreneau2($eventsslotForDay);
                         
+                        $count = $users->countAllUsersByCreneau($usersByCreneau,$event['id_in_day']); 
+                        
+                        if(min($count)<=3){
+                          $colorlight = 'rouge';
+                        }elseif(min($count)>3 AND min($count)<=7){
+                          $colorlight = 'jaune';
+                        }else{
+                          $colorlight = 'vert';
+                        }
+                                                
                        
                         ?>
                         
@@ -90,11 +93,11 @@ entete('Calendrier','Calendrier des créneaux','1');
                         </div>
                         <?php
                         foreach($count as $k=>$v){
-                          echo '('.$v.')';
-                          
+                          echo '('.$v.')';                          
+
                         }
-                        
-                      endforeach; ?>
+                                              
+                  endforeach; ?>
                     
                     
                     
