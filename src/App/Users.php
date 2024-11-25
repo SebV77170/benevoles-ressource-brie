@@ -245,12 +245,12 @@ class Users {
      
    public function getNbtotalbenevolat(){
 
-  $sql = 'SELECT USERS.nom,USERS.prenom,USERS.pseudo,SUM(TIMESTAMPDIFF(MINUTE,EVENTS.start,EVENTS.end)) DIV 60 as Heuretotal
-    FROM EVENTS
-     JOIN INSCRIPTION_CRENEAU ON INSCRIPTION_CRENEAU.id_event=EVENTS.id
-     JOIN USERS ON USERS.id=INSCRIPTION_CRENEAU.id_user
-     where YEAR(EVENTS.start) = YEAR(CURDATE()) and YEAR(EVENTS.end) = YEAR(CURDATE())
-    GROUP BY INSCRIPTION_CRENEAU.id_user'; 
+  $sql = 'SELECT users.nom,users.prenom,users.pseudo,SUM(TIMESTAMPDIFF(MINUTE,events.start,events.end)) DIV 60 as Heuretotal
+    FROM events
+     JOIN inscription_creneau ON inscription_creneau.id_event=events.id
+     JOIN users ON users.id=inscription_creneau.id_user
+     where YEAR(events.start) = YEAR(CURDATE()) and YEAR(events.end) = YEAR(CURDATE())
+    GROUP BY inscription_creneau.id_user'; 
     $sth = $this -> pdo -> query($sql);
     $result = $sth -> fetchAll();
     
