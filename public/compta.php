@@ -14,7 +14,7 @@ if(isset($admin)):
   if(isset($_POST["soumettre"])):
     $listOfUsers = $admin->getNbtotalbenevolat($_POST["startDate"],$_POST["endDate"]);
     $totalHeureDeTravail = $listOfUsers["totalHeures"];
-  endif;
+endif;
 ?>
 <div class="container mt-5">
         <h2 class="mb-4">Merci de sélectionner l'intervalle de date que vous souhaitez svp.</h2>
