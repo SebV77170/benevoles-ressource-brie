@@ -243,18 +243,22 @@ class Users {
         $sth->execute(array($this->id));
     }
      
-   public function getNbtotalbenevolat(){
-
-  $sql = 'SELECT users.nom,users.prenom,users.pseudo,SUM(TIMESTAMPDIFF(MINUTE,events.start,events.end)) DIV 60 as Heuretotal
-    FROM events
-     JOIN inscription_creneau ON inscription_creneau.id_event=events.id
-     JOIN users ON users.id=inscription_creneau.id_user
-     where YEAR(events.start) = YEAR(CURDATE()) and YEAR(events.end) = YEAR(CURDATE())
-    GROUP BY inscription_creneau.id_user'; 
-    $sth = $this -> pdo -> query($sql);
-    $result = $sth -> fetchAll();
-    
-    return $result;
-}
+    public function getNbtotalbenevolat($startDate, $endDate) {
+        $sql = 'SELECT users.nom, users.prenom, users.pseudo, 
+                       SUM(TIMESTAMPDIFF(MINUTE, events.start, events.end)) DIV 60 as Heuretotal
+                FROM events
+                JOIN inscription_creneau ON inscription_creneau.id_event = events.id
+                JOIN users ON users.id = inscription_creneau.id_user
+                WHERE events.start >= :startDate AND events.end <= :endDate
+                GROUP BY inscription_creneau.id_user';
+        
+        $sth = $this->pdo->prepare($sql);
+        $sth->bindParam(':startDate', $startDate);
+        $sth->bindParam(':endDate', $endDate);
+        $sth->execute();
+        $result = $sth->fetchAll();
+        
+        return $result;
+    }    
 
 }

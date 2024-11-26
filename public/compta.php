@@ -11,12 +11,27 @@ entete('Comptabilité bénévoles','Comptabilité bénévoles','4');
 
  
 if(isset($admin)):
-$listOfUsers = $admin->getNbtotalbenevolat();
+  if(isset($_POST["soumettre"])):
+    $listOfUsers = $admin->getNbtotalbenevolat($_POST["startDate"],$_POST["endDate"]);
+  endif;
 
 
 
 ?>
-
+<div class="container mt-5">
+        <h2 class="mb-4">Merci de sélectionner l'intervalle de date que vous souhaitez svp.</h2>
+        <form>
+            <div class="form-group">
+                <label for="startDate">Date de début</label>
+                <input type="date" class="form-control" id="startDate" name="startDate" required>
+            </div>
+            <div class="form-group">
+                <label for="endDate">Date de fin</label>
+                <input type="date" class="form-control" id="endDate" name="endDate" required>
+            </div>
+            <button type="submit" name="soumettre" class="btn btn-primary">Soumettre</button>
+        </form>
+</div>
 <div class="container bg-light rounded mt-4 mb-4">
     <form method="post">
         <table class="table table-striped">
