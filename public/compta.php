@@ -13,14 +13,12 @@ entete('Comptabilité bénévoles','Comptabilité bénévoles','4');
 if(isset($admin)):
   if(isset($_POST["soumettre"])):
     $listOfUsers = $admin->getNbtotalbenevolat($_POST["startDate"],$_POST["endDate"]);
+    $totalHeureDeTravail = $listOfUsers["totalHeures"];
   endif;
-
-
-
 ?>
 <div class="container mt-5">
         <h2 class="mb-4">Merci de sélectionner l'intervalle de date que vous souhaitez svp.</h2>
-        <form>
+        <form method="post">
             <div class="form-group">
                 <label for="startDate">Date de début</label>
                 <input type="date" class="form-control" id="startDate" name="startDate" required>
@@ -32,8 +30,9 @@ if(isset($admin)):
             <button type="submit" name="soumettre" class="btn btn-primary">Soumettre</button>
         </form>
 </div>
+<?php if(isset($_POST["soumettre"])):?>
 <div class="container bg-light rounded mt-4 mb-4">
-    <form method="post">
+      <h1>Sur la période de <?=$_POST["startDate"]?> à <?=$_POST["endDate"]?>, les <?= $totalHeureDeTravail ?> heures de travail se répartissent comme suit :</h1>
         <table class="table table-striped">
             <thead>
               <tr>
@@ -45,7 +44,7 @@ if(isset($admin)):
             </thead>
             <tbody>
                 <?php
-                foreach($listOfUsers as $v):
+                foreach($listOfUsers["result"] as $v):
                 ?>
                 <tr>
                     <th scope="col"><?=$v['nom']?></th>
@@ -70,9 +69,9 @@ if(isset($admin)):
               </tr>
             </tfoot>
           </table>
-      </form>
+      
   </div>
-  
+<?php endif;?>  
 <?php
 
 else:

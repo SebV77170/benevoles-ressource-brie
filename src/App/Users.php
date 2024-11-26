@@ -250,15 +250,23 @@ class Users {
                 JOIN inscription_creneau ON inscription_creneau.id_event = events.id
                 JOIN users ON users.id = inscription_creneau.id_user
                 WHERE events.start >= :startDate AND events.end <= :endDate
-                GROUP BY inscription_creneau.id_user';
+                GROUP BY inscription_creneau.id_user
+                ORDER BY heuretotal DESC' ;
         
         $sth = $this->pdo->prepare($sql);
         $sth->bindParam(':startDate', $startDate);
         $sth->bindParam(':endDate', $endDate);
         $sth->execute();
         $result = $sth->fetchAll();
-        
-        return $result;
-    }    
+
+        // Calculer la somme totale des heures
+        $totalHeures = 0;
+        foreach ($result as $row) {
+            $totalHeures += $row['Heuretotal'];
+        }
+    
+    return ['result' => $result, 'totalHeures' => $totalHeures];
+    }
+         
 
 }
