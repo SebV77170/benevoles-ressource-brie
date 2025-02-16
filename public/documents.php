@@ -14,8 +14,8 @@ entete('Documents','Documents','5');
     <ul>
 
         <h2>Association</h2>
-        <a href="../fichiers/reglement_interieur.pdf" target="_blank"><li id="bleu">Règlement intérieur</li></a>
-        <a href="../fichiers/statuts.pdf" target="_blank"><li id="bleu">Statuts de l'association</li></a>
+        <a href="mise-a-jour.php" target="_blank"><li id="bleu">Règlement intérieur</li></a>
+        <a href="mise-a-jour.php" target="_blank"><li id="bleu">Statuts de l'association</li></a>
 
         <h2>Véhicules</h2>
         <a href="../fichiers/conducteur.pdf" target="_blank"><li id="bleu">Accréditation conducteur</li></a>
