@@ -351,5 +351,140 @@ class Creneaux {
         return $translation;
 
     }
+
+    
+    
+    public function getAllCreneaux(): array {
+        $query = $this->pdo->query("
+            SELECT id, id_in_day, cat_creneau, 
+                   DATE_FORMAT(start, '%d-%m-%Y') as date, 
+                   TIME_FORMAT(start, '%H:%i') as start, 
+                   TIME_FORMAT(end, '%H:%i') as end, 
+                   name, description 
+            FROM events
+        ");
+        return $query->fetchAll();
+    }
+
+    public function deleteCreneau(int $id): bool {
+        // Récupérer le créneau pour vérifier son cat_creneau, id_in_day et sa date
+        $stmt = $this->pdo->prepare("SELECT id_in_day, cat_creneau, DATE(start) as date FROM events WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $creneau = $stmt->fetch();
+
+        if (!$creneau) {
+            return false; // Créneau introuvable
+        }
+
+        if ($creneau['cat_creneau'] == 0) {
+            // Supprimer tous les sous-créneaux (cat_creneau == 1) ayant le même id_in_day et la même date
+            $stmt = $this->pdo->prepare("DELETE FROM events WHERE id_in_day = :id_in_day AND DATE(start) = :date AND cat_creneau = 1");
+            $stmt->execute(['id_in_day' => $creneau['id_in_day'], 'date' => $creneau['date']]);
+        }
+
+        // Supprimer le créneau lui-même (plage globale ou sous-créneau)
+        $stmt = $this->pdo->prepare("DELETE FROM events WHERE id = :id");
+        return $stmt->execute(['id' => $id]);
+    }
+    
+    public function getAvailableMonths(): array {
+        // Récupérer la première et la dernière date dans la table
+        $query = $this->pdo->query("
+            SELECT 
+                MIN(start) AS first_date, 
+                MAX(start) AS last_date 
+            FROM events
+        ");
+        $result = $query->fetch();
+
+        if (!$result['first_date'] || !$result['last_date']) {
+            return []; // Aucun événement trouvé
+        }
+
+        $startDate = new \DateTime($result['first_date']);
+        $endDate = new \DateTime($result['last_date']);
+        $endDate->modify('last day of this month'); // Inclure le dernier mois complet
+
+        $months = [];
+        $formatter = new \IntlDateFormatter('fr_FR', \IntlDateFormatter::FULL, \IntlDateFormatter::NONE);
+        $formatter->setPattern('MMMM'); // Format pour le nom complet du mois
+
+        while ($startDate <= $endDate) {
+            $months[] = [
+                'year' => $startDate->format('Y'),
+                'month' => $startDate->format('m'),
+                'month_name' => ucfirst($formatter->format($startDate)) // Nom du mois en français
+            ];
+            $startDate->modify('+1 month');
+        }
+
+        return $months;
+    }
+
+    public function getCreneauxByMonth(int $year, int $month): array {
+        $stmt = $this->pdo->prepare("
+            SELECT id, id_in_day, cat_creneau, 
+                   DATE_FORMAT(start, '%d-%m-%Y') as date, 
+                   TIME_FORMAT(start, '%H:%i') as start, 
+                   TIME_FORMAT(end, '%H:%i') as end, 
+                   name, description 
+            FROM events 
+            ORDER BY start
+        ");
+        $stmt->execute(['year' => $year, 'month' => $month]);
+        return $stmt->fetchAll();
+    }
+    
+    public function getCreneauxByDateRange(int $startYear, int $startMonth, int $endYear, int $endMonth): array {
+        $startDate = "$startYear-$startMonth-01";
+        $endDate = date("Y-m-t", strtotime("$endYear-$endMonth-01")); // Dernier jour du mois de fin
+        $stmt = $this->pdo->prepare("
+            SELECT id, id_in_day, cat_creneau, 
+                   DATE_FORMAT(start, '%d-%m-%Y') as date, 
+                   TIME_FORMAT(start, '%H:%i') as start, 
+                   TIME_FORMAT(end, '%H:%i') as end, 
+                   name, description 
+            FROM events 
+            WHERE start BETWEEN :start_date AND :end_date
+            ORDER BY start
+        ");
+        $stmt->execute(['start_date' => $startDate, 'end_date' => $endDate]);
+        return $stmt->fetchAll();
+    }
+    
+    public function getCreneauxToDelete(int $id): array {
+        // Récupérer le créneau pour vérifier son cat_creneau, id_in_day et sa date
+        $stmt = $this->pdo->prepare("SELECT id_in_day, cat_creneau, DATE(start) as date FROM events WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $creneau = $stmt->fetch();
+
+        if (!$creneau) {
+            return []; // Créneau introuvable
+        }
+
+        if ($creneau['cat_creneau'] == 0) {
+            // Récupérer tous les sous-créneaux (cat_creneau == 1) ayant le même id_in_day et la même date
+            $stmt = $this->pdo->prepare("
+                SELECT id, DATE_FORMAT(start, '%d-%m-%Y') as date, 
+                       TIME_FORMAT(start, '%H:%i') as start, 
+                       TIME_FORMAT(end, '%H:%i') as end 
+                FROM events 
+                WHERE id_in_day = :id_in_day AND DATE(start) = :date AND cat_creneau = 1
+            ");
+            $stmt->execute(['id_in_day' => $creneau['id_in_day'], 'date' => $creneau['date']]);
+            return $stmt->fetchAll();
+        }
+
+        // Retourner uniquement le créneau lui-même
+        $stmt = $this->pdo->prepare("
+            SELECT id, DATE_FORMAT(start, '%d-%m-%Y') as date, 
+                   TIME_FORMAT(start, '%H:%i') as start, 
+                   TIME_FORMAT(end, '%H:%i') as end 
+            FROM events 
+            WHERE id = :id
+        ");
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetchAll();
+    }
     
 }

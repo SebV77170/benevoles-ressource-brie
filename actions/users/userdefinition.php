@@ -1,5 +1,16 @@
 <?php
-$pdo= get_pdo();
+if ($_SERVER['SERVER_NAME'] === 'benevoles') {
+    $dbname = 'objets';
+    $serveur = 'localhost';
+    $login = 'root';
+    $pass = '';
+} else {
+    $dbname = '09007_ressourceb';
+    $serveur = 'sql01.ouvaton.coop';
+    $login = '09007_ressourceb';
+    $pass = 'LaRessourcerieDeBrie77170!';
+}
+$pdo = get_pdo($dbname, $serveur, $login, $pass); // Initialize the PDO connection globally
 $users = new App\Users($_SESSION, $pdo);
 
 if($users->getAdmin() == 2):

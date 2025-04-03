@@ -26,7 +26,7 @@ if($_SESSION['admin'] >= 0){
         
         <a href="compta.php"><li id="bleu">Comptabilité bénévolat</li></a>
         
-        
+        <a href="gestion_creneaux.php"><li id="bleu">Gestion des créneaux</li></a>
         
     </ul>
 </div>
@@ -40,5 +40,4 @@ if($_SESSION['admin'] >= 0){
     
     include('../includes/footer.php');
     ?>
-            
-   
+
