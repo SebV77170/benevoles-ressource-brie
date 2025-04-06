@@ -20,8 +20,12 @@ $Creneau = new Calendar\Creneaux($pdo, $timezone);
 // Récupération des mois et années disponibles dans la base de données
 $months = $Creneau->getAvailableMonths();
 
-$startMonth = $_GET['start_month'] ?? null;
-$endMonth = $_GET['end_month'] ?? null;
+// Définir les valeurs par défaut pour les mois de début et de fin
+$currentMonth = (new DateTime())->format('m-Y');
+$twoMonthsLater = (new DateTime('+2 months'))->format('m-Y');
+
+$startMonth = $_GET['start_month'] ?? $currentMonth;
+$endMonth = $_GET['end_month'] ?? $twoMonthsLater;
 
 if ($startMonth && $endMonth) {
     list($startMonth, $startYear) = explode('-', $startMonth);
@@ -107,7 +111,7 @@ entete('Gestion des créneaux', 'Gestion des créneaux', '4');
                 <label for="start_month">Début :</label>
                 <select name="start_month" id="start_month" class="form-control">
                     <?php foreach ($months as $month) : ?>
-                        <option value="<?= $month['month'] ?>-<?= $month['year'] ?>" <?= isset($startMonth, $startYear) && "$startMonth-$startYear" == "{$month['month']}-{$month['year']}" ? 'selected' : '' ?>>
+                        <option value="<?= $month['month'] ?>-<?= $month['year'] ?>" <?= (isset($_GET['start_month']) && $_GET['start_month'] == "{$month['month']}-{$month['year']}") || (!isset($_GET['start_month']) && "$currentMonth" == "{$month['month']}-{$month['year']}") ? 'selected' : '' ?>>
                             <?= $month['month_name'] ?> <?= $month['year'] ?>
                         </option>
                     <?php endforeach; ?>
@@ -117,7 +121,7 @@ entete('Gestion des créneaux', 'Gestion des créneaux', '4');
                 <label for="end_month">Fin :</label>
                 <select name="end_month" id="end_month" class="form-control">
                     <?php foreach ($months as $month) : ?>
-                        <option value="<?= $month['month'] ?>-<?= $month['year'] ?>" <?= isset($endMonth, $endYear) && "$endMonth-$endYear" == "{$month['month']}-{$month['year']}" ? 'selected' : '' ?>>
+                        <option value="<?= $month['month'] ?>-<?= $month['year'] ?>" <?= (isset($_GET['end_month']) && $_GET['end_month'] == "{$month['month']}-{$month['year']}") || (!isset($_GET['end_month']) && "$twoMonthsLater" == "{$month['month']}-{$month['year']}") ? 'selected' : '' ?>>
                             <?= $month['month_name'] ?> <?= $month['year'] ?>
                         </option>
                     <?php endforeach; ?>
@@ -126,6 +130,19 @@ entete('Gestion des créneaux', 'Gestion des créneaux', '4');
             <button type="submit" class="btn btn-primary">Filtrer</button>
         </form>
     </div>
+    <?php
+    $uniqueOpenDays = [];
+    foreach ($groupedCreneaux as $id_in_day => $creneauxGroup) {
+        foreach ($creneauxGroup as $creneau) {
+            if ($creneau['cat_creneau'] == 0) { // Vérifie si c'est une plage globale
+                $uniqueOpenDays[$creneau['date']] = true; // Utilise la date comme clé pour éviter les doublons
+            }
+        }
+    }
+    $totalOpenDays = count($uniqueOpenDays);
+    ?>
+    <p>Nombre de journées d'ouverture trouvées : <strong><?= $totalOpenDays ?></strong></p>
+       
     <hr>
     <table class="table table-striped">
         <thead>
