@@ -91,7 +91,7 @@ if($_SESSION['admin'] >= 0){
           <div class="container">
             <div class="row">
               <div class="col">
-                <h2>Quelle(s) jour(s) ?</h2>
+                <h2>Quel(s) jour(s) ?</h2>
                 <?php foreach($jour->days as $k=>$v):?>
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" name="jour[]" value="<?=$v?>" id="flexCheckDefault">
