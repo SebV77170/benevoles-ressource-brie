@@ -356,14 +356,43 @@ class Creneaux {
     
     public function getAllCreneaux(): array {
         $query = $this->pdo->query("
-            SELECT id, id_in_day, cat_creneau, 
-                   DATE_FORMAT(start, '%d-%m-%Y') as date, 
-                   TIME_FORMAT(start, '%H:%i') as start, 
-                   TIME_FORMAT(end, '%H:%i') as end, 
-                   name, description 
+            SELECT id, id_in_day, cat_creneau,
+                   DATE_FORMAT(start, '%d-%m-%Y') as date,
+                   TIME_FORMAT(start, '%H:%i') as start,
+                   TIME_FORMAT(end, '%H:%i') as end,
+                   name, description
             FROM events
         ");
         return $query->fetchAll();
+    }
+
+    /**
+     * Retourne un créneau par son identifiant
+     */
+    public function getCreneauById(int $id): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT id, id_in_day, cat_creneau,
+                    DATE_FORMAT(start, '%Y-%m-%d') as date,
+                    TIME_FORMAT(start, '%H:%i') as start,
+                    TIME_FORMAT(end, '%H:%i') as end,
+                    name, description
+             FROM events WHERE id = :id"
+        );
+        $stmt->execute(['id' => $id]);
+        $creneau = $stmt->fetch();
+        return $creneau ?: null;
+    }
+
+    /**
+     * Met à jour un créneau existant
+     */
+    public function updateCreneau(int $id, string $name, string $description, string $start, string $end): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE events SET name = ?, description = ?, start = ?, end = ? WHERE id = ?'
+        );
+        return $stmt->execute([$name, $description, $start, $end, $id]);
     }
 
     public function deleteCreneau(int $id): bool {

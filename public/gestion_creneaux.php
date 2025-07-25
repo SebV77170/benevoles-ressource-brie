@@ -173,6 +173,10 @@ entete('Gestion des créneaux', 'Gestion des créneaux', '4');
                                 <input type="hidden" name="id" value="<?= $creneau['id'] ?>">
                                 <button type="submit" name="delete" class="btn btn-danger btn-sm">Supprimer</button>
                             </form>
+                            <form method="get" action="edit_creneau.php" style="display:inline;">
+                                <input type="hidden" name="id" value="<?= $creneau['id'] ?>">
+                                <button type="submit" class="btn btn-primary btn-sm">Modifier</button>
+                            </form>
                         </td>
                     </tr>
                 <?php endforeach; ?>
