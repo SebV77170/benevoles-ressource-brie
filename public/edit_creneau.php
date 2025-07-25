@@ -21,9 +21,9 @@ if (!$creneau) {
 
 if (isset($_POST['save'])) {
     if (!empty($_POST['date']) && !empty($_POST['start']) && !empty($_POST['end'])) {
-        $date_us = implode('-', array_reverse(explode('-', $_POST['date'])));
-        $start = $date_us.' '.$_POST['start'];
-        $end = $date_us.' '.$_POST['end'];
+        // La date provenant du champ input est déjà au format YYYY-MM-DD
+        $start = $_POST['date'].' '.$_POST['start'];
+        $end = $_POST['date'].' '.$_POST['end'];
         $name = $_POST['name'];
         $description = $_POST['description'];
         if ($creneaux->updateCreneau($id, $name, $description, $start, $end)) {
