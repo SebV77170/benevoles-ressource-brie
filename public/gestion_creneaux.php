@@ -1,94 +1,75 @@
 <?php
 session_start();
-
 require '../actions/users/securityAction.php';
 require '../src/bootstrap.php';
 require '../actions/users/userdefinition.php';
 require '../src/config.php';
 
 if (!isset($pdo)) {
-    die('Erreur : La connexion à la base de données n\'a pas été établie.');
+    die("Erreur : La connexion à la base de données n'a pas été établie.");
 }
 
 if ($_SESSION['admin'] < 1) {
-    echo 'Vous n\'êtes pas autorisé à accéder à cette page.';
+    echo "Vous n'êtes pas autorisé à accéder à cette page.";
     exit();
 }
 
-$Creneau = new Calendar\Creneaux($pdo, $timezone);
+$creneaux = new Calendar\Creneaux($pdo, $timezone);
+$month = new Calendar\Month($_GET['month'] ?? null, $_GET['year'] ?? null);
+$start = $month->getStartingDay();
+$weeks = $month->getWeeks();
+$end = (clone $start)->modify('+' . (6 + 7 * ($weeks - 1)) . ' days');
 
-// Récupération des mois et années disponibles dans la base de données
-$months = $Creneau->getAvailableMonths();
-
-// Définir les valeurs par défaut pour les mois de début et de fin
-$currentMonth = (new DateTime())->format('m-Y');
-$twoMonthsLater = (new DateTime('+2 months'))->format('m-Y');
-
-$startMonth = $_GET['start_month'] ?? $currentMonth;
-$endMonth = $_GET['end_month'] ?? $twoMonthsLater;
-
-if ($startMonth && $endMonth) {
-    list($startMonth, $startYear) = explode('-', $startMonth);
-    list($endMonth, $endYear) = explode('-', $endMonth);
-    $creneaux = $Creneau->getCreneauxByDateRange($startYear, $startMonth, $endYear, $endMonth);
-} else {
-    $creneaux = $Creneau->getAllCreneaux();
+// Jours contenant au moins une plage globale
+$global = $creneaux->getEventsBetween($start, $end, 0);
+$daysWithEvents = [];
+foreach ($global as $event) {
+    $date = explode(' ', $event['start'])[0];
+    $daysWithEvents[$date][] = $event;
 }
 
-// Group créneaux by id_in_day
+// Récupération des créneaux d'une journée
+$selectedDate = $_GET['date'] ?? null;
 $groupedCreneaux = [];
-foreach ($creneaux as $creneau) {
-    if (isset($creneau['id_in_day'])) {
+if ($selectedDate) {
+    $creneauxJour = $creneaux->getCreneauxByDate($selectedDate);
+    foreach ($creneauxJour as $creneau) {
         $groupedCreneaux[$creneau['id_in_day']][] = $creneau;
     }
 }
 
-// Trier les créneaux par ordre chronologique
-foreach ($groupedCreneaux as &$creneauxGroup) {
-    usort($creneauxGroup, function ($a, $b) {
-        return strtotime($a['date'] . ' ' . $a['start']) - strtotime($b['date'] . ' ' . $b['start']);
-    });
-}
-
 if (isset($_POST['confirm_delete'])) {
     $id = $_POST['id'];
-    $toDelete = $Creneau->getCreneauxToDelete($id); // Récupère les créneaux à supprimer
-    if ($Creneau->deleteCreneau($id)) {
+    $toDelete = $creneaux->getCreneauxToDelete($id);
+    if ($creneaux->deleteCreneau($id)) {
         $message = "Les créneaux suivants ont été supprimés :<br>";
-        foreach ($toDelete as $creneau) {
-            $message .= "- {$creneau['date']} de {$creneau['start']} à {$creneau['end']}<br>";
+        foreach ($toDelete as $cr) {
+            $message .= "- {$cr['date']} de {$cr['start']} à {$cr['end']}<br>";
+        }
+        if ($selectedDate) {
+            $creneauxJour = $creneaux->getCreneauxByDate($selectedDate);
+            $groupedCreneaux = [];
+            foreach ($creneauxJour as $creneau) {
+                $groupedCreneaux[$creneau['id_in_day']][] = $creneau;
+            }
         }
     } else {
         $message = "Erreur lors de la suppression des créneaux.";
-    }
-    // Refresh list after deletion
-    $creneaux = $Creneau->getAllCreneaux();
-    $groupedCreneaux = [];
-    foreach ($creneaux as $creneau) {
-        if (isset($creneau['id_in_day'])) {
-            $groupedCreneaux[$creneau['id_in_day']][] = $creneau;
-        }
-    }
-    foreach ($groupedCreneaux as &$creneauxGroup) {
-        usort($creneauxGroup, function ($a, $b) {
-            return strtotime($a['date'] . ' ' . $a['start']) - strtotime($b['date'] . ' ' . $b['start']);
-        });
     }
 }
 
 if (isset($_POST['delete'])) {
     $id = $_POST['id'];
-    $toDelete = $Creneau->getCreneauxToDelete($id); // Récupère les créneaux à supprimer
+    $toDelete = $creneaux->getCreneauxToDelete($id);
     $confirmationMessage = "Les créneaux suivants vont être supprimés :<br>";
-    foreach ($toDelete as $creneau) {
-        $confirmationMessage .= "- {$creneau['date']} de {$creneau['start']} à {$creneau['end']}<br>";
+    foreach ($toDelete as $cr) {
+        $confirmationMessage .= "- {$cr['date']} de {$cr['start']} à {$cr['end']}<br>";
     }
     $confirmationMessage .= "Confirmez-vous cette suppression ?";
 }
 
 entete('Gestion des créneaux', 'Gestion des créneaux', '4');
 ?>
-
 <div class="container">
     <h1>Gestion des créneaux</h1>
     <?php if (isset($confirmationMessage)) : ?>
@@ -97,88 +78,89 @@ entete('Gestion des créneaux', 'Gestion des créneaux', '4');
             <form method="post" style="display:inline;">
                 <input type="hidden" name="id" value="<?= $id ?>">
                 <button type="submit" name="confirm_delete" class="btn btn-danger">Confirmer</button>
-                <a href="gestion_creneaux.php" class="btn btn-secondary">Annuler</a>
+                <a href="gestion_creneaux.php?month=<?= $month->month; ?>&year=<?= $month->year; ?><?php if($selectedDate) echo '&date='.$selectedDate; ?>" class="btn btn-secondary">Annuler</a>
             </form>
         </div>
     <?php endif; ?>
     <?php if (isset($message)) : ?>
         <div class="alert alert-info"><?= $message ?></div>
     <?php endif; ?>
-    <div class="calendar">
-        <h2>Filtrer par plage de durée</h2>
-        <form method="get" class="form-inline">
-            <div class="form-group">
-                <label for="start_month">Début :</label>
-                <select name="start_month" id="start_month" class="form-control">
-                    <?php foreach ($months as $month) : ?>
-                        <option value="<?= $month['month'] ?>-<?= $month['year'] ?>" <?= (isset($_GET['start_month']) && $_GET['start_month'] == "{$month['month']}-{$month['year']}") || (!isset($_GET['start_month']) && "$currentMonth" == "{$month['month']}-{$month['year']}") ? 'selected' : '' ?>>
-                            <?= $month['month_name'] ?> <?= $month['year'] ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+
+    <div class="calendar mb-4">
+        <div class="d-flex flex-row align-items-center justify-content-between mx-sm-3">
+            <h2><?= $month->toString(); ?></h2>
+            <div>
+                <a href="gestion_creneaux.php?month=<?= $month->previousMonth()->month; ?>&year=<?= $month->previousMonth()->year; ?>" class="btn btn-primary">&lt;</a>
+                <a href="gestion_creneaux.php?month=<?= $month->nextMonth()->month; ?>&year=<?= $month->nextMonth()->year; ?>" class="btn btn-primary">&gt;</a>
             </div>
-            <div class="form-group">
-                <label for="end_month">Fin :</label>
-                <select name="end_month" id="end_month" class="form-control">
-                    <?php foreach ($months as $month) : ?>
-                        <option value="<?= $month['month'] ?>-<?= $month['year'] ?>" <?= (isset($_GET['end_month']) && $_GET['end_month'] == "{$month['month']}-{$month['year']}") || (!isset($_GET['end_month']) && "$twoMonthsLater" == "{$month['month']}-{$month['year']}") ? 'selected' : '' ?>>
-                            <?= $month['month_name'] ?> <?= $month['year'] ?>
-                        </option>
+        </div>
+        <table class="calendar__table calendar__table--<?= $weeks; ?>weeks">
+            <?php for ($i = 0; $i < $weeks; $i++): ?>
+                <tr>
+                    <?php foreach($month->days as $k => $day):
+                        $date = (clone $start)->modify('+' . ($k + $i * 7) . ' days');
+                        $isToday = date('Y-m-d') === $date->format('Y-m-d');
+                        $hasEvent = isset($daysWithEvents[$date->format('Y-m-d')]);
+                    ?>
+                    <td class="<?= $month->withinMonth($date) ? '' : 'calendar__othermonth'; ?> <?= $isToday ? 'is-today' : ''; ?>">
+                        <?php if ($i === 0): ?>
+                            <div class="calendar__weekday"><?= $day; ?></div>
+                        <?php endif; ?>
+                        <?php if ($hasEvent): ?>
+                            <a class="calendar__day" href="gestion_creneaux.php?month=<?= $month->month; ?>&year=<?= $month->year; ?>&date=<?= $date->format('Y-m-d'); ?>">
+                                <?= $date->format('d'); ?>
+                            </a>
+                        <?php else: ?>
+                            <span class="calendar__day text-muted">
+                                <?= $date->format('d'); ?>
+                            </span>
+                        <?php endif; ?>
+                    </td>
                     <?php endforeach; ?>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary">Filtrer</button>
-        </form>
+                </tr>
+            <?php endfor; ?>
+        </table>
     </div>
-    <?php
-    $uniqueOpenDays = [];
-    foreach ($groupedCreneaux as $id_in_day => $creneauxGroup) {
-        foreach ($creneauxGroup as $creneau) {
-            if ($creneau['cat_creneau'] == 0) { // Vérifie si c'est une plage globale
-                $uniqueOpenDays[$creneau['date']] = true; // Utilise la date comme clé pour éviter les doublons
-            }
-        }
-    }
-    $totalOpenDays = count($uniqueOpenDays);
-    ?>
-    <p>Nombre de journées d'ouverture trouvées : <strong><?= $totalOpenDays ?></strong></p>
-       
-    <hr>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Date</th>
-                <th>Début</th>
-                <th>Fin</th>
-                <th>Type</th>
-                <th>Nom</th>
-                <th>Description</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($groupedCreneaux as $id_in_day => $creneauxGroup) : ?>
-                <?php foreach ($creneauxGroup as $index => $creneau) : ?>
+
+    <?php if ($selectedDate): ?>
+        <h2>Créneaux du <?= (new DateTime($selectedDate))->format('d-m-Y'); ?></h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Début</th>
+                    <th>Fin</th>
+                    <th>Type</th>
+                    <th>Nom</th>
+                    <th>Description</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($groupedCreneaux as $id_in_day => $crGroup): ?>
+                <?php foreach ($crGroup as $cr): ?>
                     <tr>
-                        <td><?= $creneau['id'] ?></td>
-                        <td><?= $creneau['cat_creneau'] == 0 ? '<strong>' . $creneau['date'] . '</strong>' : $creneau['date'] ?></td>
-                        <td><?= $creneau['cat_creneau'] == 0 ? '<strong>' . $creneau['start'] . '</strong>' : $creneau['start'] ?></td>
-                        <td><?= $creneau['cat_creneau'] == 0 ? '<strong>' . $creneau['end'] . '</strong>' : $creneau['end'] ?></td>
-                        <td><?= $creneau['cat_creneau'] == 0 ? '<strong>Plage globale</strong>' : 'Sous-créneau' ?></td>
-                        <td><?= !empty($creneau['name']) ? $creneau['name'] : '-' ?></td>
-                        <td><?= !empty($creneau['description']) ? $creneau['description'] : '-' ?></td>
+                        <td><?= $cr['id']; ?></td>
+                        <td><?= $cr['start']; ?></td>
+                        <td><?= $cr['end']; ?></td>
+                        <td><?= $cr['cat_creneau'] == 0 ? '<strong>Plage globale</strong>' : 'Sous-créneau'; ?></td>
+                        <td><?= !empty($cr['name']) ? $cr['name'] : '-'; ?></td>
+                        <td><?= !empty($cr['description']) ? $cr['description'] : '-'; ?></td>
                         <td>
                             <form method="post" style="display:inline;">
-                                <input type="hidden" name="id" value="<?= $creneau['id'] ?>">
+                                <input type="hidden" name="id" value="<?= $cr['id']; ?>">
                                 <button type="submit" name="delete" class="btn btn-danger btn-sm">Supprimer</button>
+                            </form>
+                            <form method="get" action="edit_creneau.php" style="display:inline;">
+                                <input type="hidden" name="id" value="<?= $cr['id']; ?>">
+                                <button type="submit" class="btn btn-primary btn-sm">Modifier</button>
                             </form>
                         </td>
                     </tr>
                 <?php endforeach; ?>
             <?php endforeach; ?>
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    <?php endif; ?>
 </div>
-
 <?php render('footer'); ?>
