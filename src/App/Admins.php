@@ -7,9 +7,9 @@ class Admins extends Users {
     public function __construct(array $data, \PDO $pdo){
         
         
-        $this->id = $data['id'];
+        $this->id = $data['uuid_users'];
         require('../actions/db.php');
-        $sql='SELECT * FROM users WHERE id = '.$data['id'].'';
+        $sql='SELECT * FROM users WHERE uuid_users = '.$data['uuid_users'].'';
         $sth=$db->query($sql);
         $result=$sth->fetch();
         $this->nom = $result['nom'];
@@ -37,8 +37,8 @@ class Admins extends Users {
     
     public function getOneUser(int $id): array{
         $sql = 'SELECT * FROM users
-                INNER JOIN date_users ON users.id = date_users.id_user
-                WHERE id = ?';
+                INNER JOIN date_users ON users.uuid_users = date_users.id_user
+                WHERE uuid_users = ?';
         $sth = $this->pdo->prepare($sql);
         $sth->execute(array($id));
         $results=$sth->fetchAll();
@@ -49,7 +49,7 @@ class Admins extends Users {
     
     public function getAllUsersAndDateWaiting(){
         $sql = "SELECT * FROM users
-                INNER JOIN date_users ON users.id = date_users.id_user
+                INNER JOIN date_users ON users.uuid_users = date_users.id_user
                 WHERE admin = 0";
         $sth = $this->pdo->query($sql);
         $results = $sth->fetchAll();
@@ -58,7 +58,7 @@ class Admins extends Users {
     
     public function getAllUsersAndDate(): array{
         $sql = "SELECT * FROM users
-                INNER JOIN date_users ON users.id = date_users.id_user";
+                INNER JOIN date_users ON users.uuid_users = date_users.id_user";
         $sth = $this->pdo->query($sql);
         $results = $sth->fetchAll();
         return $results;
@@ -66,7 +66,7 @@ class Admins extends Users {
     public function updateHabilitation(int $id,int $habilitation){
         $sql = "UPDATE users
                 SET admin = ".$habilitation."
-                WHERE id = ".$id."";
+                WHERE uuid_users = ".$id."";
         $sth = $this->pdo->query($sql);
     }
 }

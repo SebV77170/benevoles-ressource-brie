@@ -47,12 +47,12 @@ require('../actions/db.php');
                 //Insérer les date de l'utilisateur dans la table date_users
                 
                 $insertUserOnDate = $db->prepare('INSERT INTO date_users(id_user, date_inscription, date_derniere_visite, date_dernier_creneau, date_prochain_creneau)VALUES(?,?,?,?,?)');
-                $insertUserOnDate->execute(array($usersInfos['id'], $date, $date_visite, $date_last_creneau, $date_next_creneau));
+                $insertUserOnDate->execute(array($usersInfos['uuid_users'], $date, $date_visite, $date_last_creneau, $date_next_creneau));
                 
                 //Authentifier l'utilisateur sur le site et récupérer ses données dans des variables session.
                 
                 $_SESSION['auth'] = true;
-                $_SESSION['id'] = $usersInfos['id'];
+                $_SESSION['uuid_users'] = $usersInfos['uuid_users'];
                 $_SESSION['nom'] = $usersInfos['nom'];
                 $_SESSION['prenom'] = $usersInfos['prenom'];
                 $_SESSION['pseudo'] = $usersInfos['pseudo'];

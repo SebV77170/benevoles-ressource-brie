@@ -19,7 +19,7 @@ require('../actions/db.php');
             //Vérifier si l'utilisateur existe (si le pseudo existe)
             
             $checkIfUserExists = $db->prepare('SELECT * FROM users
-                                               INNER JOIN date_users ON users.id = date_users.id_user
+                                               INNER JOIN date_users ON users.uuid_users = date_users.id_user
                                                WHERE pseudo = ?');
             $checkIfUserExists->execute(array($user_pseudo));
             
@@ -38,7 +38,7 @@ require('../actions/db.php');
                     $date_visite = new \DateTime('now',new \DateTimeZone('Europe/Paris'));
                     $date_visite = $date_visite->format('Y-m-d G:i');
                     
-                    $sql = 'UPDATE date_users SET date_derniere_visite = ? WHERE id_user = '.$usersInfos['id'].'';
+                    $sql = 'UPDATE date_users SET date_derniere_visite = ? WHERE id_user = '.$usersInfos['uuid_users'].'';
                     $sth = $db->prepare($sql);
                     $sth -> execute(array($date_visite)); 
                     
@@ -46,7 +46,7 @@ require('../actions/db.php');
                 
                     $_SESSION['auth'] = true;
                     $_SESSION['admin']=$usersInfos['admin'];
-                    $_SESSION['id'] = $usersInfos['id'];
+                    $_SESSION['uuid_users'] = $usersInfos['uuid_users'];
                     $_SESSION['nom'] = $usersInfos['nom'];
                     $_SESSION['prenom'] = $usersInfos['prenom'];
                     $_SESSION['ucprenom'] = ucwords($usersInfos['prenom']);

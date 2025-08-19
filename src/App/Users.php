@@ -19,10 +19,10 @@ class Users {
     public function __construct(array $data, \PDO $pdo){
         
         
-        $this->id = $data['id'];
+        $this->id = $data['uuid_users'];
         
         require('../actions/db.php');
-        $sql='SELECT * FROM users WHERE id = '.$data['id'].'';
+        $sql='SELECT * FROM users WHERE uuid_users = '.$data['uuid_users'].'';
         $sth=$db->query($sql);
         $result=$sth->fetch();
         $this->nom = $result['nom'];
@@ -157,7 +157,7 @@ class Users {
         $collect=[];
         foreach($data as $v){
         $sql = 'SELECT events.start, events.end, inscription_creneau.id_user, inscription_creneau.id_event, inscription_creneau.fonction, users.prenom, users.nom, users.pseudo FROM inscription_creneau
-                INNER JOIN users ON inscription_creneau.id_user = users.id
+                INNER JOIN users ON inscription_creneau.id_user = users.uuid_users
                 INNER JOIN events ON inscription_creneau.id_event = events.id
                 WHERE inscription_creneau.id_event = ? ';
         $sth =$this->pdo->prepare($sql);
@@ -231,14 +231,14 @@ class Users {
     
     public function updateMailUser($mail){
         $mail=htmlspecialchars($mail);
-        $sql='UPDATE users SET mail = "'.$mail.'" WHERE id = ?';
+        $sql='UPDATE users SET mail = "'.$mail.'" WHERE uuid_users = ?';
         $sth=$this->pdo->prepare($sql);
         $sth->execute(array($this->id));
     }
 
     public function updateTelUser($tel){
         $tel=htmlspecialchars($tel);
-        $sql='UPDATE users SET tel = "'.$tel.'" WHERE id = ?';
+        $sql='UPDATE users SET tel = "'.$tel.'" WHERE uuid_users = ?';
         $sth=$this->pdo->prepare($sql);
         $sth->execute(array($this->id));
     }
@@ -248,7 +248,7 @@ class Users {
                        SUM(TIMESTAMPDIFF(MINUTE, events.start, events.end)) DIV 60 as Heuretotal
                 FROM events
                 JOIN inscription_creneau ON inscription_creneau.id_event = events.id
-                JOIN users ON users.id = inscription_creneau.id_user
+                JOIN users ON users.uuid_users = inscription_creneau.id_user
                 WHERE events.start >= :startDate AND events.end <= :endDate
                 GROUP BY inscription_creneau.id_user
                 ORDER BY heuretotal DESC' ;
