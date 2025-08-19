@@ -339,7 +339,7 @@ CREATE TABLE `ticketdecaissetemp` (
 --
 
 CREATE TABLE `users` (
-  `uuid_users` int(11) NOT NULL,
+  `uuid_user` int(11) NOT NULL,
   `prenom` varchar(255) NOT NULL,
   `nom` varchar(255) NOT NULL,
   `pseudo` varchar(255) NOT NULL,
@@ -353,7 +353,7 @@ CREATE TABLE `users` (
 -- DÃ©chargement des donnÃ©es de la table `users`
 --
 
-INSERT INTO `users` (`uuid_users`, `prenom`, `nom`, `pseudo`, `password`, `admin`, `mail`, `tel`) VALUES
+INSERT INTO `users` (`uuid_user`, `prenom`, `nom`, `pseudo`, `password`, `admin`, `mail`, `tel`) VALUES
 (3, 'test', 'test', 'test', '$2y$10$6dHioE/yVOfFenoyZWHV/ux3PmgLFDZw/9BYjoYiWeCqiEu5xRaMa', 2, NULL, NULL),
 (5, 'test3', 'test3', 'test3', '$2y$10$q3tHQfKNyrwnLAtr835FseVodAe0951LjGljh0X2hWN1TbIqyf2km', 2, NULL, NULL);
 
@@ -480,7 +480,7 @@ ALTER TABLE `ticketdecaissetemp`
 -- Index pour la table `users`
 --
 ALTER TABLE `users`
-  ADD PRIMARY KEY (`uuid_users`);
+  ADD PRIMARY KEY (`uuid_user`);
 
 --
 -- Index pour la table `vente`
@@ -598,7 +598,7 @@ ALTER TABLE `ticketdecaissetemp`
 -- AUTO_INCREMENT pour la table `users`
 --
 ALTER TABLE `users`
-  MODIFY `uuid_users` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `uuid_user` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT pour la table `vente`
