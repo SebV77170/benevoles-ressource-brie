@@ -2,8 +2,8 @@
 -- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
--- Hôte : 127.0.0.1
--- Généré le : mer. 01 mars 2023 à 11:32
+-- HÃ´te : 127.0.0.1
+-- GÃ©nÃ©rÃ© le : mer. 01 mars 2023 Ã  11:32
 -- Version du serveur : 10.4.22-MariaDB
 -- Version de PHP : 8.0.15
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de données : `brie`
+-- Base de donnÃ©es : `brie`
 --
 
 -- --------------------------------------------------------
@@ -36,7 +36,7 @@ CREATE TABLE `admin` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Déchargement des données de la table `admin`
+-- DÃ©chargement des donnÃ©es de la table `admin`
 --
 
 INSERT INTO `admin` (`id`, `prenom`, `nom`, `login`, `pass`) VALUES
@@ -110,7 +110,7 @@ CREATE TABLE `date_users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Déchargement des données de la table `date_users`
+-- DÃ©chargement des donnÃ©es de la table `date_users`
 --
 
 INSERT INTO `date_users` (`id_date`, `id_user`, `date_inscription`, `date_derniere_visite`, `date_dernier_creneau`, `date_prochain_creneau`) VALUES
@@ -136,7 +136,7 @@ CREATE TABLE `events` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `events`
+-- DÃ©chargement des donnÃ©es de la table `events`
 --
 
 INSERT INTO `events` (`id`, `cat_creneau`, `name`, `description`, `start`, `end`) VALUES
@@ -156,7 +156,7 @@ CREATE TABLE `fonction` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Déchargement des données de la table `fonction`
+-- DÃ©chargement des donnÃ©es de la table `fonction`
 --
 
 INSERT INTO `fonction` (`id`, `fonction`, `description`) VALUES
@@ -176,7 +176,7 @@ CREATE TABLE `inscription_creneau` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Déchargement des données de la table `inscription_creneau`
+-- DÃ©chargement des donnÃ©es de la table `inscription_creneau`
 --
 
 INSERT INTO `inscription_creneau` (`id_inscription`, `id_user`, `id_event`, `fonction`) VALUES
@@ -339,7 +339,7 @@ CREATE TABLE `ticketdecaissetemp` (
 --
 
 CREATE TABLE `users` (
-  `id` int(11) NOT NULL,
+  `uuid_user` int(11) NOT NULL,
   `prenom` varchar(255) NOT NULL,
   `nom` varchar(255) NOT NULL,
   `pseudo` varchar(255) NOT NULL,
@@ -350,10 +350,10 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Déchargement des données de la table `users`
+-- DÃ©chargement des donnÃ©es de la table `users`
 --
 
-INSERT INTO `users` (`id`, `prenom`, `nom`, `pseudo`, `password`, `admin`, `mail`, `tel`) VALUES
+INSERT INTO `users` (`uuid_user`, `prenom`, `nom`, `pseudo`, `password`, `admin`, `mail`, `tel`) VALUES
 (3, 'test', 'test', 'test', '$2y$10$6dHioE/yVOfFenoyZWHV/ux3PmgLFDZw/9BYjoYiWeCqiEu5xRaMa', 2, NULL, NULL),
 (5, 'test3', 'test3', 'test3', '$2y$10$q3tHQfKNyrwnLAtr835FseVodAe0951LjGljh0X2hWN1TbIqyf2km', 2, NULL, NULL);
 
@@ -371,7 +371,7 @@ CREATE TABLE `vente` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Index pour les tables déchargées
+-- Index pour les tables dÃ©chargÃ©es
 --
 
 --
@@ -480,7 +480,7 @@ ALTER TABLE `ticketdecaissetemp`
 -- Index pour la table `users`
 --
 ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`uuid_user`);
 
 --
 -- Index pour la table `vente`
@@ -489,7 +489,7 @@ ALTER TABLE `vente`
   ADD PRIMARY KEY (`id_temp_vente`);
 
 --
--- AUTO_INCREMENT pour les tables déchargées
+-- AUTO_INCREMENT pour les tables dÃ©chargÃ©es
 --
 
 --
@@ -598,7 +598,7 @@ ALTER TABLE `ticketdecaissetemp`
 -- AUTO_INCREMENT pour la table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `uuid_user` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT pour la table `vente`
@@ -608,7 +608,7 @@ ALTER TABLE `vente`
 COMMIT;
 
 --
---requ�te pour la somme de la dur�� des cr�neaux sur lesquels se sont inscrits les benevoles
+--requête pour la somme de la duréé des créneaux sur lesquels se sont inscrits les benevoles
 --
 
 SELECT USERS.nom,USERS.prenom,USERS.pseudo,SUM(TIMESTAMPDIFF(MINUTE,EVENTS.start,EVENTS.end)) DIV 60 as Heuretotal
