@@ -2,6 +2,7 @@
 
 session_start();
 require('../actions/db.php');
+require('../actions/uuid.php');
 
 //Validation du formulaire
 
@@ -24,6 +25,7 @@ require('../actions/db.php');
             $user_email = htmlspecialchars($_POST['mail']);
             $user_password = password_hash($_POST['password'], PASSWORD_DEFAULT);
             $user_admin = 0;
+            $user_uuid = generate_uuidv4();
             
             //Vérifier si l'utilisateur est déjà sur le site
             
@@ -34,8 +36,8 @@ require('../actions/db.php');
                 
                 //Insérer l'utilisateur dans la BDD
                 
-                $insertUserOnWebsite = $db->prepare('INSERT INTO users(prenom, nom, pseudo, mail, password, admin)VALUES(?,?,?,?,?,?)');
-                $insertUserOnWebsite->execute(array($user_prenom, $user_nom, $user_pseudo,$user_email, $user_password, $user_admin));
+                $insertUserOnWebsite = $db->prepare('INSERT INTO users(uuid_user, prenom, nom, pseudo, mail, password, admin)VALUES(?,?,?,?,?,?,?)');
+                $insertUserOnWebsite->execute(array($user_uuid, $user_prenom, $user_nom, $user_pseudo,$user_email, $user_password, $user_admin));
                 
                 //Récupérer les informations de l'utilisateur
                 

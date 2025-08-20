@@ -35,8 +35,12 @@ if($_SESSION['admin'] > 0){
 
 <?php
     }else{
-        echo '<h1>Désolé, votre inscription n\'a pas encore été validée. Nous faisons au mieux compte tenu de nos emplois du temps afin de valider au plus vite. A bientôt.</h1>';
-    }
+    echo '<h1>Merci d’avoir créé votre compte !</h1>
+          <p>Votre inscription est bien enregistrée mais n’a pas encore été validée.<br>
+          Nous faisons au mieux, en fonction de nos disponibilités, pour valider rapidement toutes les nouvelles inscriptions.</p>
+          <p>À très bientôt !</p>';
+}
+
     
     include('../includes/footer.php');
     ?>

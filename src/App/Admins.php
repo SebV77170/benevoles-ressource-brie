@@ -2,71 +2,44 @@
 namespace App;
 
 class Admins extends Users {
-               
-    
+
     public function __construct(array $data, \PDO $pdo){
-        
-        
-        $this->id = $data['uuid_user'];
-        require('../actions/db.php');
-        $sql='SELECT * FROM users WHERE uuid_user = '.$data['uuid_user'].'';
-        $sth=$db->query($sql);
-        $result=$sth->fetch();
-        $this->nom = $result['nom'];
-        $this->prenom = $result['prenom'];
-        $this->pseudo = $result['pseudo'];
-        $this->admin = $result['admin'];
-        $this->mail = $result['mail'];
-        $this->tel = $result['tel'];
-        
-        $this->date_inscription = $data['date_inscription'];
-        $this->date_visite = $data['date_derniere_visite'];
-        $this->date_last_creneau = $data['date_dernier_creneau'];
-        $this->date_next_creneau = $data['date_prochain_creneau'];
-        $this->pdo = $pdo;
-        
+        parent::__construct($data, $pdo); // hydrate via Users
     }
-    
-    public function getAllUsers(){
+
+    public function getAllUsers(): array {
         $sql = 'SELECT * FROM users';
         $sth = $this->pdo->query($sql);
-        $results=$sth->fetchAll();
-        
-        return $results;
+        return $sth->fetchAll(\PDO::FETCH_ASSOC);
     }
-    
-    public function getOneUser(int $id): array{
+
+    public function getOneUser(string $uuid): array {
         $sql = 'SELECT * FROM users
                 INNER JOIN date_users ON users.uuid_user = date_users.id_user
-                WHERE uuid_user = ?';
+                WHERE users.uuid_user = :uuid';
         $sth = $this->pdo->prepare($sql);
-        $sth->execute(array($id));
-        $results=$sth->fetchAll();
-        
-        
-        return $results;
+        $sth->execute([':uuid' => $uuid]);
+        return $sth->fetchAll(\PDO::FETCH_ASSOC);
     }
-    
-    public function getAllUsersAndDateWaiting(){
-        $sql = "SELECT * FROM users
+
+    public function getAllUsersAndDateWaiting(): array {
+        $sql = 'SELECT * FROM users
                 INNER JOIN date_users ON users.uuid_user = date_users.id_user
-                WHERE admin = 0";
+                WHERE users.admin = 0';
         $sth = $this->pdo->query($sql);
-        $results = $sth->fetchAll();
-        return $results;
+        return $sth->fetchAll(\PDO::FETCH_ASSOC);
     }
-    
-    public function getAllUsersAndDate(): array{
-        $sql = "SELECT * FROM users
-                INNER JOIN date_users ON users.uuid_user = date_users.id_user";
+
+    public function getAllUsersAndDate(): array {
+        $sql = 'SELECT * FROM users
+                INNER JOIN date_users ON users.uuid_user = date_users.id_user';
         $sth = $this->pdo->query($sql);
-        $results = $sth->fetchAll();
-        return $results;
+        return $sth->fetchAll(\PDO::FETCH_ASSOC);
     }
-    public function updateHabilitation(int $id,int $habilitation){
-        $sql = "UPDATE users
-                SET admin = ".$habilitation."
-                WHERE uuid_user = ".$id."";
-        $sth = $this->pdo->query($sql);
+
+    public function updateHabilitation(string $uuid, int $habilitation): void {
+        $sql = 'UPDATE users SET admin = :admin WHERE uuid_user = :uuid';
+        $sth = $this->pdo->prepare($sql);
+        $sth->execute([':admin' => $habilitation, ':uuid' => $uuid]);
     }
 }

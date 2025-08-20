@@ -33,14 +33,15 @@ require('../actions/db.php');
                 
                 if(password_verify($user_password, $usersInfos['password'])){
                     
-                    //Récupérer et insérer la date de cette connexion dans la table date_users:
-                    
-                    $date_visite = new \DateTime('now',new \DateTimeZone('Europe/Paris'));
-                    $date_visite = $date_visite->format('Y-m-d G:i');
-                    
-                    $sql = 'UPDATE date_users SET date_derniere_visite = ? WHERE id_user = '.$usersInfos['uuid_user'].'';
+                   // Récupérer et insérer la date de cette connexion dans la table date_users:
+                    $date_visite = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
+                    $date_visite = $date_visite->format('Y-m-d H:i:s'); // (optionnel: avec secondes)
+
+                    $sql = 'UPDATE date_users 
+                            SET date_derniere_visite = ? 
+                            WHERE id_user = ?';
                     $sth = $db->prepare($sql);
-                    $sth -> execute(array($date_visite)); 
+                    $sth->execute([$date_visite, $usersInfos['uuid_user']]);
                     
                     //Authentifier l'utilisateur sur le site et récupérer ses données dans des variables session.
                 

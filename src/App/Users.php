@@ -2,7 +2,7 @@
 namespace App;
 
 class Users {
-    
+
     protected $id;
     protected $nom;
     protected $prenom;
@@ -14,259 +14,194 @@ class Users {
     protected $date_inscription;
     protected $date_visite;
     protected $date_last_creneau;
-    protected $date_next_creneau;          
-    
+    protected $date_next_creneau;
+
     public function __construct(array $data, \PDO $pdo){
-        
-        
+        // on garde l'UUID passé par $data
         $this->id = $data['uuid_user'];
-        
-        require('../actions/db.php');
-        $sql='SELECT * FROM users WHERE uuid_user = '.$data['uuid_user'].'';
-        $sth=$db->query($sql);
-        $result=$sth->fetch();
-        $this->nom = $result['nom'];
-        $this->prenom = $result['prenom'];
-        $this->pseudo = $result['pseudo'];
-        $this->admin = $result['admin'];
-        $this->mail = $result['mail'];
-        $this->tel = $result['tel'];
-        
-        $this->date_inscription = $data['date_inscription'];
-        $this->date_visite = $data['date_derniere_visite'];
-        $this->date_last_creneau = $data['date_dernier_creneau'];
-        $this->date_next_creneau = $data['date_prochain_creneau'];
         $this->pdo = $pdo;
 
-        
-        
+        // Récupération de l'utilisateur en REQUÊTE PRÉPARÉE
+        $sql = 'SELECT * FROM users WHERE uuid_user = :uuid';
+        $sth = $this->pdo->prepare($sql);
+        $sth->execute([':uuid' => $this->id]);
+        $result = $sth->fetch(\PDO::FETCH_ASSOC);
+
+        // Hydratation (avec valeurs par défaut si absent)
+        $this->nom    = $result['nom']    ?? null;
+        $this->prenom = $result['prenom'] ?? null;
+        $this->pseudo = $result['pseudo'] ?? null;
+        $this->admin  = $result['admin']  ?? 0;
+        $this->mail   = $result['mail']   ?? null;
+        $this->tel    = $result['tel']    ?? null;
+
+        $this->date_inscription   = $data['date_inscription']      ?? null;
+        $this->date_visite        = $data['date_derniere_visite']  ?? null;
+        $this->date_last_creneau  = $data['date_dernier_creneau']  ?? null;
+        $this->date_next_creneau  = $data['date_prochain_creneau'] ?? null;
     }
-    
-    public function getId(){
-        return $this->id;
-    }
-    
-    public function getNom(){
-        return $this->nom;
-    }
-    
-    public function getPrenom(){
-        return $this->prenom;
-    }
-    
-    public function getPseudo(){
-        return $this->pseudo;
-    }
-    
-    public function getAdmin(){
-        return $this->admin;
-    }
-    
-    public function getMail(){
-        return $this->mail;
-    }
-    
-    public function getTel(){
-        return $this->tel;
-    }
-    
-    public function getInscription(){
-        return $this->date_inscription;
-    }
-    
-    public function getLastVisit(){
-        return $this->date_visite;
-    }
-    
-    public function getLastCreneau(){
-        return $this->date_creneau;
-    }
-    
-    
-    
+
+    public function getId(){ return $this->id; }
+    public function getNom(){ return $this->nom; }
+    public function getPrenom(){ return $this->prenom; }
+    public function getPseudo(){ return $this->pseudo; }
+    public function getAdmin(){ return $this->admin; }
+    public function getMail(){ return $this->mail; }
+    public function getTel(){ return $this->tel; }
+    public function getInscription(){ return $this->date_inscription; }
+    public function getLastVisit(){ return $this->date_visite; }
+
+    // bug fixé (propriété correcte)
+    public function getLastCreneau(){ return $this->date_last_creneau; }
+
     public function getCreneauUser(){
-        $id = $this -> getId();
-        $sql =
-                'SELECT * FROM inscription_creneau 
+        $sql = 'SELECT * FROM inscription_creneau 
                 INNER JOIN events ON inscription_creneau.id_event = events.id
-                WHERE inscription_creneau.id_user = '.$id.' ORDER BY events.start ASC';
-        $sth = $this -> pdo -> query($sql);
-        $results = $sth -> fetchAll();
-        
-        return $results;
+                WHERE inscription_creneau.id_user = :id
+                ORDER BY events.start ASC';
+        $sth = $this->pdo->prepare($sql);
+        $sth->execute([':id' => $this->id]);
+        return $sth->fetchAll();
     }
-    
-    //Vérifie si un utilisateur est déjà inscrit sur un créneau.
-    
+
+    // Vérifie si un utilisateur est déjà inscrit sur un créneau.
     public function CheckIfCreneauExist($id_creneau) : bool{
-        
-        $id = $this -> getId();
-        $id_users = $this ->id;
-        $sql = 'SELECT * FROM inscription_creneau WHERE id_event = '.$id_creneau.' AND id_user = '.$id_users.'';
-        $sth = $this ->pdo->query($sql);
-        $results = $sth ->fetchAll();
-        if(count($results) > 0){
-            $answer = TRUE;
-        }else{
-            $answer = FALSE;
-        }
-        
-        return $answer;
+        $sql = 'SELECT 1 FROM inscription_creneau
+                WHERE id_event = :idevent AND id_user = :iduser
+                LIMIT 1';
+        $sth = $this->pdo->prepare($sql);
+        $sth->execute([':idevent' => $id_creneau, ':iduser' => $this->id]);
+        return (bool) $sth->fetchColumn();
     }
-    
-    //Insere les creneaux dans la db inscription_creneau et retourne le nombre créneaux ajoutés
-    
+
+    // Insère des créneaux
     public function insertCreneauUser(array $data) : int{
-        $id = $this ->getId();
-        
         $fonction = 'N/A';
-        $collect =[];
-        foreach($data as $k=>$v){
-            
-            $sql = 'INSERT INTO inscription_creneau (id_user, id_event, fonction) VALUES (?,?,?)';
-            $sth = $this ->pdo->prepare($sql);
-            $result = $sth->execute(array($id, $v, $fonction));
-            $result = $sth ->rowCount();
-            $collect[] = $result;
-            
-        }
-        
-        return count($collect);
-    }
-    
-    //Supprime les creneaux dans la db inscription_creneau et retourne le nombre créneaux supprimés
-    
-    public function deleteCreneauUser(array $data) :int {
-        $id = $this ->getId();
-        
-        $collect =[];
-        foreach($data as $k=>$v){
-            
-            $sql = 'DELETE FROM inscription_creneau WHERE id_user = ? AND id_event = ? ';
-            $sth = $this ->pdo->prepare($sql);
-            $result = $sth->execute(array($id, $v));
-            $result = $sth ->rowCount();
-            $collect[] = $result;
-            
-        }
-        
-        return count($collect);
-    }
-    
-    public function getAllUsersByCreneau(array $data):array{
-        $collect=[];
+        $sql = 'INSERT INTO inscription_creneau (id_user, id_event, fonction) VALUES (:id, :event, :fonction)';
+        $sth = $this->pdo->prepare($sql);
+
+        $count = 0;
         foreach($data as $v){
-        $sql = 'SELECT events.start, events.end, inscription_creneau.id_user, inscription_creneau.id_event, inscription_creneau.fonction, users.prenom, users.nom, users.pseudo FROM inscription_creneau
-                INNER JOIN users ON inscription_creneau.id_user = users.uuid_user
+            $sth->execute([':id' => $this->id, ':event' => $v, ':fonction' => $fonction]);
+            $count += $sth->rowCount();
+        }
+        return $count;
+    }
+
+    // Supprime des créneaux
+    public function deleteCreneauUser(array $data) : int {
+        $sql = 'DELETE FROM inscription_creneau WHERE id_user = :id AND id_event = :event';
+        $sth = $this->pdo->prepare($sql);
+
+        $count = 0;
+        foreach($data as $v){
+            $sth->execute([':id' => $this->id, ':event' => $v]);
+            $count += $sth->rowCount();
+        }
+        return $count;
+    }
+
+    public function getAllUsersByCreneau(array $data): array{
+        $sql = 'SELECT events.start, events.end, inscription_creneau.id_user, inscription_creneau.id_event, inscription_creneau.fonction,
+                       users.prenom, users.nom, users.pseudo
+                FROM inscription_creneau
+                INNER JOIN users  ON inscription_creneau.id_user = users.uuid_user
                 INNER JOIN events ON inscription_creneau.id_event = events.id
-                WHERE inscription_creneau.id_event = ? ';
-        $sth =$this->pdo->prepare($sql);
-        $sth ->execute(array($v['id']));
-        $results = $sth->fetchAll();
-        $collect[] = $results;
-        }
-        
-        return $collect;
-    }
-    
-    public function getAllUsersByCreneau2(array $data):array{
+                WHERE inscription_creneau.id_event = :event';
+        $sth = $this->pdo->prepare($sql);
+
         $collect=[];
         foreach($data as $v){
-        $sql = 'SELECT events.start, events.end, events.id, inscription_creneau.id_user, inscription_creneau.id_event, inscription_creneau.fonction FROM events
-                LEFT OUTER JOIN inscription_creneau ON events.id = inscription_creneau.id_event
-                WHERE events.id = ? ';
-        $sth =$this->pdo->prepare($sql);
-        $sth ->execute(array($v['id']));
-        $results = $sth->fetchAll();
-        $collect[] = $results;
+            $sth->execute([':event' => $v['id']]);
+            $collect[] = $sth->fetchAll();
         }
-        
         return $collect;
     }
-    
-    public function countAllUsersByCreneau(array $data):array{
+
+    public function getAllUsersByCreneau2(array $data): array{
+        $sql = 'SELECT events.start, events.end, events.id,
+                       inscription_creneau.id_user, inscription_creneau.id_event, inscription_creneau.fonction
+                FROM events
+                LEFT OUTER JOIN inscription_creneau ON events.id = inscription_creneau.id_event
+                WHERE events.id = :event';
+        $sth = $this->pdo->prepare($sql);
+
+        $collect=[];
+        foreach($data as $v){
+            $sth->execute([':event' => $v['id']]);
+            $collect[] = $sth->fetchAll();
+        }
+        return $collect;
+    }
+
+    public function countAllUsersByCreneau(array $data): array{
         $collect=[];
         foreach($data as $k=>$v){
-            
             foreach($v as $n){
-                $debut=new \DateTime(''.$n['start'].'');
-                $fin=new \DateTime(''.$n['end'].'');
-                $debutstring = $debut ->format('G:i');
-                $finstring = $fin ->format('G:i');
-                $date = ''.$debutstring.' '.$finstring.'';
-                
-                if($n['id_user']){
-                    $collect[''.$date.'']=count($v);
-                }else{
-                    $collect[''.$date.'']=0;
-                }
-            } 
+                $debut = new \DateTime($n['start']);
+                $fin   = new \DateTime($n['end']);
+                $date  = $debut->format('G:i').' '.$fin->format('G:i');
+                $collect[$date] = $n['id_user'] ? count($v) : 0;
+            }
         }
         return $collect;
     }
-    
-    public function checkIfFunctionExists(int $id):bool{
-        $sql='SELECT * FROM inscription_creneau WHERE id_inscription='.$id.'';
-        $sth=$this->pdo->query($sql);
-        $results=$sth->fetch();
-        if($results['fonction']==='N/A'):
-            $answer = FALSE;
-        else :
-            $answer = TRUE;
-        endif;
-        return $answer;
+
+    public function checkIfFunctionExists(int $id): bool{
+        $sql = 'SELECT fonction FROM inscription_creneau WHERE id_inscription = :id LIMIT 1';
+        $sth = $this->pdo->prepare($sql);
+        $sth->execute([':id' => $id]);
+        $row = $sth->fetch(\PDO::FETCH_ASSOC);
+        if (!$row) return false;
+        return $row['fonction'] !== 'N/A';
     }
-    
+
     public function getAllFunctions(){
         $sql='SELECT fonction FROM fonction';
-        $sth=$this->pdo->query($sql);
-        $results=$sth->fetchAll();
-        return $results;
+        return $this->pdo->query($sql)->fetchAll();
     }
-    
+
     public function updateFunction(int $id, string $fonction){
-        $sql='UPDATE inscription_creneau SET fonction = "'.$fonction.'" WHERE id_inscription = '.$id.'';
-        $sth=$this->pdo->query($sql);
-    }
-    
-    public function updateMailUser($mail){
-        $mail=htmlspecialchars($mail);
-        $sql='UPDATE users SET mail = "'.$mail.'" WHERE uuid_user = ?';
+        $sql='UPDATE inscription_creneau SET fonction = :fonction WHERE id_inscription = :id';
         $sth=$this->pdo->prepare($sql);
-        $sth->execute(array($this->id));
+        $sth->execute([':fonction' => $fonction, ':id' => $id]);
+    }
+
+    public function updateMailUser($mail){
+        $mail = htmlspecialchars($mail);
+        $sql  = 'UPDATE users SET mail = ? WHERE uuid_user = ?';
+        $sth  = $this->pdo->prepare($sql);
+        $sth->execute([$mail, $this->id]);
+        $this->mail = $mail;
     }
 
     public function updateTelUser($tel){
-        $tel=htmlspecialchars($tel);
-        $sql='UPDATE users SET tel = "'.$tel.'" WHERE uuid_user = ?';
-        $sth=$this->pdo->prepare($sql);
-        $sth->execute(array($this->id));
+        $tel = htmlspecialchars($tel);
+        $sql = 'UPDATE users SET tel = ? WHERE uuid_user = ?';
+        $sth = $this->pdo->prepare($sql);
+        $sth->execute([$tel, $this->id]);
+        $this->tel = $tel;
     }
-     
+
     public function getNbtotalbenevolat($startDate, $endDate) {
-        $sql = 'SELECT users.nom, users.prenom, users.pseudo, 
-                       SUM(TIMESTAMPDIFF(MINUTE, events.start, events.end)) DIV 60 as Heuretotal
+        $sql = 'SELECT users.nom, users.prenom, users.pseudo,
+                       SUM(TIMESTAMPDIFF(MINUTE, events.start, events.end)) DIV 60 AS Heuretotal
                 FROM events
                 JOIN inscription_creneau ON inscription_creneau.id_event = events.id
                 JOIN users ON users.uuid_user = inscription_creneau.id_user
                 WHERE events.start >= :startDate AND events.end <= :endDate
                 GROUP BY inscription_creneau.id_user
-                ORDER BY heuretotal DESC' ;
-        
+                ORDER BY Heuretotal DESC';
         $sth = $this->pdo->prepare($sql);
         $sth->bindParam(':startDate', $startDate);
         $sth->bindParam(':endDate', $endDate);
         $sth->execute();
         $result = $sth->fetchAll();
 
-        // Calculer la somme totale des heures
         $totalHeures = 0;
         foreach ($result as $row) {
-            $totalHeures += $row['Heuretotal'];
+            $totalHeures += (int)$row['Heuretotal'];
         }
-    
-    return ['result' => $result, 'totalHeures' => $totalHeures];
+        return ['result' => $result, 'totalHeures' => $totalHeures];
     }
-         
-
 }
