@@ -6,7 +6,6 @@ require('../src/config.php');
 require '../actions/users/userdefinition.php';
 
 entete('Inscription créneau','Inscrire un bénévole','4');
-
 $errorMsg = null;
 $successMsg = null;
 

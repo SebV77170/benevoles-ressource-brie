@@ -23,12 +23,14 @@ class Admins extends Users {
     }
 
     public function getAllUsersAndDateWaiting(): array {
-        $sql = 'SELECT * FROM users
-                INNER JOIN date_users ON users.uuid_user = date_users.id_user
-                WHERE users.admin = 0';
-        $sth = $this->pdo->query($sql);
-        return $sth->fetchAll(\PDO::FETCH_ASSOC);
-    }
+    $sql = 'SELECT u.uuid_user, u.nom, u.prenom, u.pseudo, u.admin,
+                   d.date_inscription, d.date_derniere_visite
+            FROM users u
+            LEFT JOIN date_users d ON d.id_user = u.uuid_user
+            WHERE u.admin = 0';
+    $sth = $this->pdo->query($sql);
+    return $sth->fetchAll(\PDO::FETCH_ASSOC);
+}
 
     public function getAllUsersAndDate(): array {
         $sql = 'SELECT * FROM users
