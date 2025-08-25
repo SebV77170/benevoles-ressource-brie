@@ -25,7 +25,9 @@ if($_SESSION['admin'] >= 0){
         <a href="list.php"><li id="bleu">Personnes inscrites sur le site</li></a>
         
         <a href="compta.php"><li id="bleu">Comptabilité bénévolat</li></a>
-        
+
+        <a href="conges_admin.php"><li id="bleu">Ressources humaines</li></a>
+
         <a href="gestion_creneaux.php"><li id="bleu">Gestion des créneaux</li></a>
         
     </ul>
