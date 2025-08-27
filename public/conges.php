@@ -8,11 +8,11 @@ require '../actions/users/userdefinition.php';
 $conges = new App\Conges($pdo);
 
 if(!empty($_POST['start']) && !empty($_POST['end'])){
-    $conges->request($_SESSION['id'], $_POST['start'], $_POST['end']);
+    $conges->request($_SESSION['uuid_user'], $_POST['start'], $_POST['end']);
     $message = 'Votre demande a été enregistrée';
 }
 
-$mesConges = $conges->getByUser($_SESSION['id']);
+$mesConges = $conges->getByUser($_SESSION['uuid_user']);
 
 entete('Congés','Demande de congés','6');
 ?>
