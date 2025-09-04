@@ -92,7 +92,7 @@ if(isset($admin)):
         <?php
         foreach($listOfUsers as $v):
         ?>
-          <option value='<?=$v['id']?>'><?php echo''.$v['prenom'].' '.$v['nom'].''?></option>
+          <option value='<?=$v['uuid_user']?>'><?php echo''.$v['prenom'].' '.$v['nom'].''?></option>
           
         <?php  
         endforeach;

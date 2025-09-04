@@ -71,7 +71,27 @@ $samedi = $creneau -> getCreneauByDay('Saturday');
 
 <h2 class='text-center'>Cochez les créneaux sur lesquels vous voulez vous inscrire sur les 3 prochains mois, puis cliquez sur s'inscrire</h2>
 <div class='container'>
-  <div class="h2 alert alert-success text-center" role="alert">Attention, depuis Septembre, des créneaux toutes les semaines sont disponibles.</div>
+  <div class="alert alert-success p-4" role="alert" style="font-size: 1.1rem;">
+  <h2 class="text-center mb-4">🎯 Objet de l'association</h2>
+
+  <p class="fw-bold">L’association a pour objet :</p>
+  <ul>
+    <li>La promotion et le développement du réemploi et de la réparation</li>
+    <li>La sensibilisation à l’économie circulaire et l’éducation à l’environnement</li>
+    <li>Le soutien au développement social local</li>
+  </ul>
+
+  <p class="fw-bold mt-4">Ces objectifs seront poursuivis à travers :</p>
+  <ul>
+    <li>
+      La gestion et le développement d’une structure de réemploi 
+      <em>(collecte / valorisation / revente…)</em> d’objets inutilisés,
+      en quelque lieu que ce soit sur la commune de Brie-Comte-Robert
+    </li>
+    <li>L’organisation d’évènements, d’interventions scolaires, d’animations et d’ateliers pour sensibiliser la population</li>
+    <li>Toute action jugée adéquate par les membres de l’association</li>
+  </ul>
+</div>
   <div class="h2 alert alert-warning text-center" role="alert">En étant bénévole à la ressourcerie, je m'engage à respecter les statuts, ainsi que le règlement intérieur.
 </div>
 
