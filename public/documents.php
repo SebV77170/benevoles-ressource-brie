@@ -21,10 +21,6 @@ entete('Documents','Documents','5');
         <a href="../fichiers/conducteur.pdf" target="_blank"><li id="bleu">Accréditation conducteur</li></a>
         <a href="../fichiers/utilisation_vehicule.pdf" target="_blank"><li id="bleu">Ordre de mission véhicule</li></a>
 
-        <h2>Dépenses</h2>
-        <a href="../fichiers/remboursement.pdf" target="_blank"><li id="bleu_twolines">Demande de remboursement de dépenses</li></a>
-        <a href="../fichiers/engagement.pdf" target="_blank"><li id="bleu_twolines">Demande d'engagement de dépenses</li></a>
-
         <h2>Bricoleurs</h2>
         <a href="../fichiers/habilitation.pdf" target="_blank"><li id="bleu">Habilitation bricoleur</li></a>
 
