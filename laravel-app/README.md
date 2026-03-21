@@ -4,7 +4,7 @@
 
 > Cette installation n'a pas pu être exécutée dans l'environnement d'agent à cause d'un accès réseau bloqué vers Packagist.
 
-Le dépôt contenait une cible Laravel incomplète : le dossier `public/` n'était pas versionné, ce qui empêchait notamment l'utilisation normale de `php artisan serve` et d'un serveur web pointant vers `public/index.php`. Le point d'entrée a maintenant été ajouté au dépôt.
+Le dépôt contenait une cible Laravel incomplète : le dossier `public/` n'était pas versionné, ce qui empêchait notamment l'utilisation normale de `php artisan serve` et d'un serveur web pointant vers `public/index.php`. Le point d'entrée a maintenant été ajouté au dépôt. Les sous-dossiers `storage/framework/*` et `storage/app/public` nécessaires au cache, aux sessions et aux vues compilées sont également versionnés pour éviter l'erreur Laravel `Please provide a valid cache path.` sur une installation fraîche.
 
 Dans un environnement avec accès Composer :
 
