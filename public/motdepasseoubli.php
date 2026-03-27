@@ -72,25 +72,27 @@ if(isset($_REQUEST['pwdrst']))
 
 
 
-  if($Pseudoinfo>0)
-  {
-    if($_SERVER["HTTP_HOST"]=='localhost:8888'):
-      $message = '<div>
-      <p><b>Bonjour!</b></p>
+  if ($Pseudoinfo > 0) {
+    if ($_SERVER["HTTP_HOST"] == 'localhost:8888') {
+        $url = 'http://localhost:8888/benevoles-ressource-brie/public/reset-password.php?secret=' . urlencode(base64_encode($pseudo));
+    } else {
+        $url = 'https://benevoles.ressourcebrie.fr/public/reset-password.php?secret=' . urlencode(base64_encode($pseudo));
+    }
+
+    $message = '
+    <div>
+      <p><b>Bonjour !</b></p>
       <p>Vous recevez cet e-mail car nous avons reçu une demande de réinitialisation du mot de passe pour votre compte.</p>
       <br>
-      <p><button class="btn btn-primary"><a href="http://localhost:8888/benevoles-ressource-brie/public/reset-password.php?secret='.base64_encode($pseudo).'">Cliquer ici pour reinitialiser votre mot de passe</a></button></p>
+      <p>
+        <a href="' . $url . '" 
+           style="display:inline-block;padding:12px 18px;background:#0d6efd;color:#ffffff;text-decoration:none;border-radius:6px;">
+           Cliquer ici pour réinitialiser votre mot de passe
+        </a>
+      </p>
       <br>
-      </div>';
-    else:
-      $message = '<div>
-      <p><b>Bonjour!</b></p>
-      <p>Vous recevez cet e-mail car nous avons reçu une demande de réinitialisation du mot de passe pour votre compte.</p>
-      <br>
-      <p><button class="btn btn-primary"><a href="http://benevoles.ressourcebrie.fr/public/reset-password.php?secret='.base64_encode($pseudo).'">Cliquer ici pour reinitialiser votre mot de passe</a></button></p>
-      <br>
-      </div>';
-    endif;
+    </div>';
+}
 
 include_once ("../PHPMailer/src/Exception.php");
 include_once("../PHPMailer/src/PHPMailer.php");
@@ -120,7 +122,7 @@ else
 {
   $msg = "Nous ne trouvons pas d'utilisateur avec cette pseudo";
 }
-}
+
 
 ?>
 <body>
