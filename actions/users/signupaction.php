@@ -4,84 +4,110 @@ session_start();
 require('../actions/db.php');
 require('../actions/uuid.php');
 
-//Validation du formulaire
+function normalizePseudo(string $pseudo): string
+{
+    $pseudo = trim($pseudo);
+    $pseudo = mb_strtolower($pseudo, 'UTF-8');
 
-    if(isset($_POST['validate'])){
-        
-        //Vérifier si l'user a bien compléter tous les champs
-    
-        if(!empty($_POST['prenom']) AND !empty($_POST['nom']) AND !empty($_POST['pseudo']) AND !empty($_POST['mail']) AND !empty($_POST['password'])){
-        
-            //Les données de l'user
-            $date = new \DateTime('now',new \DateTimeZone('Europe/Paris'));
-            $date = $date->format('Y-m-d G:i');
-            $date_visite = new \DateTime('now',new \DateTimeZone('Europe/Paris'));
-            $date_visite = $date_visite->format('Y-m-d G:i');
-            $date_last_creneau = NULL;
-            $date_next_creneau = NULL;
-            $user_prenom = htmlspecialchars($_POST['prenom']);
-            $user_nom = htmlspecialchars($_POST['nom']);
-            $user_pseudo = htmlspecialchars($_POST['pseudo']);
-            $user_email = htmlspecialchars($_POST['mail']);
-            $user_password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-            $user_admin = 0;
-            $user_uuid = generate_uuidv4();
-            
-            //Vérifier si l'utilisateur est déjà sur le site
-            
-            $checkIfUserAlreadyExists = $db->prepare('SELECT pseudo FROM users WHERE pseudo = ?');
-            $checkIfUserAlreadyExists->execute(array($user_pseudo));
-            
-            if($checkIfUserAlreadyExists->rowCount() == 0){
-                
-                //Insérer l'utilisateur dans la BDD
-                
-                $insertUserOnWebsite = $db->prepare('INSERT INTO users(uuid_user, prenom, nom, pseudo, mail, password, admin)VALUES(?,?,?,?,?,?,?)');
-                $insertUserOnWebsite->execute(array($user_uuid, $user_prenom, $user_nom, $user_pseudo,$user_email, $user_password, $user_admin));
-                
-                //Récupérer les informations de l'utilisateur
-                
-                $GetInfoOfThisUserReq = $db->prepare('SELECT * FROM users WHERE nom = ? AND prenom = ? AND pseudo = ?  AND mail = ?');
-                $GetInfoOfThisUserReq->execute(array($user_nom, $user_prenom, $user_pseudo,$user_email));
-                
-                $usersInfos = $GetInfoOfThisUserReq->fetch();
-                
-                //Insérer les date de l'utilisateur dans la table date_users
-                
-                $insertUserOnDate = $db->prepare('INSERT INTO date_users(id_user, date_inscription, date_derniere_visite, date_dernier_creneau, date_prochain_creneau)VALUES(?,?,?,?,?)');
-                $insertUserOnDate->execute(array($usersInfos['uuid_user'], $date, $date_visite, $date_last_creneau, $date_next_creneau));
-                
-                //Authentifier l'utilisateur sur le site et récupérer ses données dans des variables session.
-                
-                $_SESSION['auth'] = true;
-                $_SESSION['uuid_user'] = $usersInfos['uuid_user'];
-                $_SESSION['nom'] = $usersInfos['nom'];
-                $_SESSION['prenom'] = $usersInfos['prenom'];
-                $_SESSION['pseudo'] = $usersInfos['pseudo'];
-                $_SESSION['admin'] = $user_admin;
-                $_SESSION['mail'] = $usersInfos['mail'];
-                $_SESSION['tel'] = $usersInfos['tel'];
-                $_SESSION['date_inscription'] = $date;
-                $_SESSION['date_derniere_visite'] = $date_visite;
-                $_SESSION['date_dernier_creneau'] = $date_creneau;
-                $_SESSION['date_prochain_creneau'] = $date_next_creneau;
-                
-                //Redirection vers la page d'accueil du forum
-                
-                header('location: index.php');
-                
-            }else{
-                
-                $errorMsg = "l'utilisateur est déjà inscrit sur ce site";
-                
-            }
-            
-        
-        }else{
-            $errorMsg = "Veuillez compléter tous les champs, svp.";
-        }
-
+    $translit = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $pseudo);
+    if ($translit !== false) {
+        $pseudo = $translit;
     }
 
+    // 🔥 nettoyage des caractères parasites (dont ')
+    $pseudo = preg_replace('/[^a-z0-9]/', '', $pseudo);
 
+    return $pseudo;
+}
+
+// Validation du formulaire
+if (isset($_POST['validate'])) {
+
+    if (
+        !empty($_POST['prenom']) &&
+        !empty($_POST['nom']) &&
+        !empty($_POST['pseudo']) &&
+        !empty($_POST['mail']) &&
+        !empty($_POST['password'])
+    ) {
+
+        $date = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
+        $date = $date->format('Y-m-d G:i');
+
+        $date_visite = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
+        $date_visite = $date_visite->format('Y-m-d G:i');
+
+        $date_last_creneau = null;
+        $date_next_creneau = null;
+
+        $user_prenom = trim($_POST['prenom']);
+        $user_nom = trim($_POST['nom']);
+        $user_pseudo = trim($_POST['pseudo']);
+        $user_pseudo_normalise = normalizePseudo($user_pseudo);
+        $user_email = trim($_POST['mail']);
+        $user_password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+        $user_admin = 0;
+        $user_uuid = generate_uuidv4();
+
+        $checkIfUserAlreadyExists = $db->prepare('SELECT uuid_user FROM users WHERE pseudo_normalise = ?');
+        $checkIfUserAlreadyExists->execute(array($user_pseudo_normalise));
+
+        if ($checkIfUserAlreadyExists->rowCount() == 0) {
+
+            $insertUserOnWebsite = $db->prepare('
+                INSERT INTO users(uuid_user, prenom, nom, pseudo, pseudo_normalise, mail, password, admin)
+                VALUES(?,?,?,?,?,?,?,?)
+            ');
+            $insertUserOnWebsite->execute(array(
+                $user_uuid,
+                $user_prenom,
+                $user_nom,
+                $user_pseudo,
+                $user_pseudo_normalise,
+                $user_email,
+                $user_password,
+                $user_admin
+            ));
+
+            $GetInfoOfThisUserReq = $db->prepare('SELECT * FROM users WHERE uuid_user = ?');
+            $GetInfoOfThisUserReq->execute(array($user_uuid));
+
+            $usersInfos = $GetInfoOfThisUserReq->fetch();
+
+            $insertUserOnDate = $db->prepare('
+                INSERT INTO date_users(id_user, date_inscription, date_derniere_visite, date_dernier_creneau, date_prochain_creneau)
+                VALUES(?,?,?,?,?)
+            ');
+            $insertUserOnDate->execute(array(
+                $usersInfos['uuid_user'],
+                $date,
+                $date_visite,
+                $date_last_creneau,
+                $date_next_creneau
+            ));
+
+            $_SESSION['auth'] = true;
+            $_SESSION['uuid_user'] = $usersInfos['uuid_user'];
+            $_SESSION['nom'] = $usersInfos['nom'];
+            $_SESSION['prenom'] = $usersInfos['prenom'];
+            $_SESSION['pseudo'] = $usersInfos['pseudo'];
+            $_SESSION['admin'] = $user_admin;
+            $_SESSION['mail'] = $usersInfos['mail'];
+            $_SESSION['tel'] = $usersInfos['tel'];
+            $_SESSION['date_inscription'] = $date;
+            $_SESSION['date_derniere_visite'] = $date_visite;
+            $_SESSION['date_dernier_creneau'] = $date_last_creneau;
+            $_SESSION['date_prochain_creneau'] = $date_next_creneau;
+
+            header('location: index.php');
+            exit;
+
+        } else {
+            $errorMsg = "L'utilisateur est déjà inscrit sur ce site.";
+        }
+
+    } else {
+        $errorMsg = "Veuillez compléter tous les champs, svp.";
+    }
+}
 ?>
