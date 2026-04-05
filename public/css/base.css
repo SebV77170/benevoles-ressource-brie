@@ -129,6 +129,7 @@ input[type="submit"]:hover{
     text-decoration: none;
     color: white;
 }
+
 #vert{
     width: 100%;
     line-height: 50px;
@@ -364,4 +365,3 @@ input[type="submit"]:hover{
         margin-top: 50px;
     }
 }
-
