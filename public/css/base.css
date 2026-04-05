@@ -129,6 +129,39 @@ input[type="submit"]:hover{
     text-decoration: none;
     color: white;
 }
+
+.dropzone-wrapper{
+    width: 300px;
+    margin: 20px auto;
+    text-align: center;
+}
+
+.documents-dropzone{
+    border: 2px dashed #23A3D9;
+    border-radius: 8px;
+    padding: 18px 10px;
+    color: #0e6f96;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #f2fbff;
+}
+
+.documents-dropzone span{
+    font-size: 12px;
+}
+
+.documents-dropzone.is-dragging{
+    border-color: #26A648;
+    background-color: #eaf7ee;
+}
+
+.documents-feedback{
+    min-height: 20px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: #333;
+}
+
 #vert{
     width: 100%;
     line-height: 50px;
@@ -364,4 +397,3 @@ input[type="submit"]:hover{
         margin-top: 50px;
     }
 }
-
