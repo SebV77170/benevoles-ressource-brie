@@ -252,6 +252,41 @@ $buildPublicFileLink = static function (string $path): string {
     return '../fichiers/' . implode('/', $encodedSegments);
 };
 
+$buildFolderTree = null;
+$buildFolderTree = static function (string $absolutePath, string $relative) use (&$buildFolderTree): array {
+    $children = [];
+    $entries = scandir($absolutePath);
+    if ($entries === false) {
+        return $children;
+    }
+
+    foreach ($entries as $entry) {
+        if ($entry === '.' || $entry === '..') {
+            continue;
+        }
+
+        $childAbsolutePath = $absolutePath . '/' . $entry;
+        if (!is_dir($childAbsolutePath)) {
+            continue;
+        }
+
+        $childRelativePath = trim($relative . '/' . $entry, '/');
+        $children[] = [
+            'name' => $entry,
+            'path' => $childRelativePath,
+            'children' => $buildFolderTree($childAbsolutePath, $childRelativePath)
+        ];
+    }
+
+    usort($children, static function (array $left, array $right): int {
+        return strcasecmp($left['name'], $right['name']);
+    });
+
+    return $children;
+};
+
+$folderTree = $buildFolderTree($baseDirectoryRealPath, '');
+
 entete('Documents', 'Documents', '5');
 ?>
 
@@ -280,110 +315,141 @@ entete('Documents', 'Documents', '5');
     </div>
 
     <div class="row">
-        <div class="col-sm-6">
+        <div class="col-sm-4 col-md-3">
             <div class="panel panel-default">
-                <div class="panel-heading">Créer un dossier</div>
+                <div class="panel-heading">Arborescence</div>
                 <div class="panel-body">
-                    <form method="post" class="form-inline">
-                        <input type="hidden" name="action" value="create_folder">
-                        <div class="form-group">
-                            <label class="sr-only" for="folder_name">Nom du dossier</label>
-                            <input type="text" class="form-control" id="folder_name" name="folder_name" placeholder="Nom du dossier" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Créer</button>
-                    </form>
+                    <ul class="nav nav-pills nav-stacked">
+                        <li class="<?php echo $relativePath === '' ? 'active' : ''; ?>">
+                            <a href="documents.php"><span class="glyphicon glyphicon-hdd"></span> Racine</a>
+                        </li>
+                    </ul>
+                    <?php
+                    $renderTree = null;
+                    $renderTree = static function (array $nodes, string $currentPath, int $depth = 0) use (&$renderTree): void {
+                        if (count($nodes) === 0) {
+                            return;
+                        }
+                        ?>
+                        <ul class="nav nav-pills nav-stacked" style="margin-left: <?php echo (int) ($depth * 14); ?>px;">
+                            <?php foreach ($nodes as $node): ?>
+                                <li class="<?php echo $currentPath === $node['path'] ? 'active' : ''; ?>">
+                                    <a href="documents.php?path=<?php echo rawurlencode($node['path']); ?>">
+                                        <span class="glyphicon glyphicon-folder-open"></span>
+                                        <?php echo htmlspecialchars($node['name'], ENT_QUOTES, 'UTF-8'); ?>
+                                    </a>
+                                </li>
+                                <?php $renderTree($node['children'], $currentPath, $depth + 1); ?>
+                            <?php endforeach; ?>
+                        </ul>
+                        <?php
+                    };
+                    $renderTree($folderTree, $relativePath);
+                    ?>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-8 col-md-9">
             <div class="panel panel-default">
-                <div class="panel-heading">Ajouter des fichiers</div>
+                <div class="panel-heading">
+                    Dossier courant :
+                    <strong><?php echo $relativePath === '' ? 'Racine' : htmlspecialchars($relativePath, ENT_QUOTES, 'UTF-8'); ?></strong>
+                </div>
                 <div class="panel-body">
-                    <form method="post" enctype="multipart/form-data" id="upload-form" class="form-inline">
-                        <input type="hidden" name="action" value="upload">
-                        <div class="form-group">
-                            <label class="sr-only" for="documents-input">Fichiers</label>
-                            <input type="file" class="form-control" name="documents[]" id="documents-input" multiple>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <form method="post" class="form-inline">
+                                <input type="hidden" name="action" value="create_folder">
+                                <div class="form-group">
+                                    <label class="sr-only" for="folder_name">Nom du dossier</label>
+                                    <input type="text" class="form-control input-sm" id="folder_name" name="folder_name" placeholder="Nouveau dossier" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <span class="glyphicon glyphicon-plus"></span> Nouveau dossier
+                                </button>
+                            </form>
                         </div>
-                        <button type="submit" class="btn btn-success">Envoyer</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-xs-12">
-            <div id="documents-dropzone" class="panel panel-info">
-                <div class="panel-body text-center">
-                    Glissez-déposez vos fichiers ici pour les ajouter au dossier courant.
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="table-responsive">
-                <table class="table table-striped table-bordered table-hover">
-                    <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <th>Type</th>
-                        <th>Taille</th>
-                        <th>Modifié le</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <?php if (count($items) === 0): ?>
-                        <tr>
-                            <td colspan="5">Ce dossier est vide.</td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($items as $item): ?>
-                            <?php
-                            $itemName = $item['name'];
-                            $itemRelativePath = $buildRelativePathForChild($relativePath, $itemName);
-                            ?>
+                        <div class="col-md-6">
+                            <form method="post" enctype="multipart/form-data" id="upload-form" class="form-inline">
+                                <input type="hidden" name="action" value="upload">
+                                <div class="form-group">
+                                    <label class="sr-only" for="documents-input">Fichiers</label>
+                                    <input type="file" class="form-control input-sm" name="documents[]" id="documents-input" multiple>
+                                </div>
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <span class="glyphicon glyphicon-upload"></span> Envoyer
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <hr>
+                    <div id="documents-dropzone" class="panel panel-info">
+                        <div class="panel-body text-center">
+                            Glissez-déposez vos fichiers ici.
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
                             <tr>
-                                <td>
-                                    <?php if ($item['isDirectory']): ?>
-                                        <a href="documents.php?path=<?php echo rawurlencode($itemRelativePath); ?>">
-                                            <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
-                                            <?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>
-                                        </a>
-                                    <?php else: ?>
-                                        <a href="<?php echo $buildPublicFileLink($itemRelativePath); ?>" target="_blank">
-                                            <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
-                                            <?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>
-                                        </a>
-                                    <?php endif; ?>
-                                </td>
-                                <td><?php echo $item['isDirectory'] ? 'Dossier' : 'Fichier'; ?></td>
-                                <td><?php echo $item['isDirectory'] ? '-' : number_format((float) $item['size'] / 1024, 1, ',', ' ') . ' Ko'; ?></td>
-                                <td><?php echo date('d/m/Y H:i', (int) $item['modifiedAt']); ?></td>
-                                <td>
-                                    <form method="post" class="form-inline">
-                                        <input type="hidden" name="action" value="rename_item">
-                                        <input type="hidden" name="item_name" value="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>">
-                                        <div class="form-group">
-                                            <label class="sr-only">Nouveau nom</label>
-                                            <input type="text" class="form-control input-sm" name="new_name" placeholder="Nouveau nom" required>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary btn-sm">Renommer</button>
-                                    </form>
-                                    <form method="post" class="form-inline" onsubmit="return confirm('Confirmer la suppression ?');">
-                                        <input type="hidden" name="action" value="delete_item">
-                                        <input type="hidden" name="item_name" value="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>">
-                                        <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
-                                    </form>
-                                </td>
+                                <th>Nom</th>
+                                <th>Modifié le</th>
+                                <th>Type</th>
+                                <th>Taille</th>
+                                <th>Actions</th>
                             </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                    </tbody>
-                </table>
+                            </thead>
+                            <tbody>
+                            <?php if (count($items) === 0): ?>
+                                <tr>
+                                    <td colspan="5">Ce dossier est vide.</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($items as $item): ?>
+                                    <?php
+                                    $itemName = $item['name'];
+                                    $itemRelativePath = $buildRelativePathForChild($relativePath, $itemName);
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <?php if ($item['isDirectory']): ?>
+                                                <a href="documents.php?path=<?php echo rawurlencode($itemRelativePath); ?>">
+                                                    <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
+                                                    <?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>
+                                                </a>
+                                            <?php else: ?>
+                                                <a href="<?php echo $buildPublicFileLink($itemRelativePath); ?>" target="_blank">
+                                                    <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
+                                                    <?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>
+                                                </a>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><?php echo date('d/m/Y H:i', (int) $item['modifiedAt']); ?></td>
+                                        <td><?php echo $item['isDirectory'] ? 'Dossier de fichiers' : 'Fichier'; ?></td>
+                                        <td><?php echo $item['isDirectory'] ? '' : number_format((float) $item['size'] / 1024, 1, ',', ' ') . ' Ko'; ?></td>
+                                        <td>
+                                            <form method="post" class="form-inline">
+                                                <input type="hidden" name="action" value="rename_item">
+                                                <input type="hidden" name="item_name" value="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>">
+                                                <div class="form-group">
+                                                    <label class="sr-only">Nouveau nom</label>
+                                                    <input type="text" class="form-control input-sm" name="new_name" placeholder="Nouveau nom" required>
+                                                </div>
+                                                <button type="submit" class="btn btn-default btn-sm">Renommer</button>
+                                            </form>
+                                            <form method="post" class="form-inline" onsubmit="return confirm('Confirmer la suppression ?');">
+                                                <input type="hidden" name="action" value="delete_item">
+                                                <input type="hidden" name="item_name" value="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>">
+                                                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
