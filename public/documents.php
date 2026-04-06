@@ -171,6 +171,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $redirectToCurrentPath($relativePath);
     }
 
+    if ($action === 'move_item') {
+        $itemName = $normalizeName($_POST['item_name'] ?? '');
+        $targetFolder = $normalizeName($_POST['target_folder'] ?? '');
+
+        if ($itemName === '' || $targetFolder === '') {
+            $setFlashMessage('error', 'Déplacement invalide.');
+            $redirectToCurrentPath($relativePath);
+        }
+
+        $sourcePath = $currentDirectory . '/' . $itemName;
+        $targetDirectory = $currentDirectory . '/' . $targetFolder;
+        $destinationPath = $targetDirectory . '/' . $itemName;
+
+        if (!file_exists($sourcePath) || !is_dir($targetDirectory)) {
+            $setFlashMessage('error', 'Élément ou dossier cible introuvable.');
+            $redirectToCurrentPath($relativePath);
+        }
+
+        if (file_exists($destinationPath)) {
+            $setFlashMessage('error', 'Un élément avec ce nom existe déjà dans le dossier cible.');
+            $redirectToCurrentPath($relativePath);
+        }
+
+        if (is_dir($sourcePath)) {
+            $sourceRealPath = realpath($sourcePath);
+            $targetRealPath = realpath($targetDirectory);
+            if ($sourceRealPath !== false && $targetRealPath !== false && strpos($targetRealPath . '/', $sourceRealPath . '/') === 0) {
+                $setFlashMessage('error', 'Impossible de déplacer un dossier dans lui-même.');
+                $redirectToCurrentPath($relativePath);
+            }
+        }
+
+        if (rename($sourcePath, $destinationPath)) {
+            $setFlashMessage('success', 'Élément déplacé avec succès.');
+        } else {
+            $setFlashMessage('error', 'Impossible de déplacer l\'élément.');
+        }
+
+        $redirectToCurrentPath($relativePath);
+    }
+
     if ($action === 'upload' && isset($_FILES['documents'])) {
         $documents = $_FILES['documents'];
         $total = is_array($documents['name']) ? count($documents['name']) : 0;
@@ -250,6 +291,31 @@ $buildPublicFileLink = static function (string $path): string {
     $segments = explode('/', $path);
     $encodedSegments = array_map('rawurlencode', $segments);
     return '../fichiers/' . implode('/', $encodedSegments);
+};
+
+$getIconClass = static function (array $item): string {
+    if ($item['isDirectory']) {
+        return 'glyphicon-folder-open';
+    }
+
+    $extension = strtolower((string) pathinfo($item['name'], PATHINFO_EXTENSION));
+    if ($extension === 'pdf') {
+        return 'glyphicon-book';
+    }
+    if (in_array($extension, ['doc', 'docx', 'odt', 'txt'], true)) {
+        return 'glyphicon-file';
+    }
+    if (in_array($extension, ['xls', 'xlsx', 'csv'], true)) {
+        return 'glyphicon-list-alt';
+    }
+    if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+        return 'glyphicon-picture';
+    }
+    if (in_array($extension, ['zip', 'rar', '7z'], true)) {
+        return 'glyphicon-compressed';
+    }
+
+    return 'glyphicon-file';
 };
 
 $buildFolderTree = null;
@@ -409,17 +475,25 @@ entete('Documents', 'Documents', '5');
                                     <?php
                                     $itemName = $item['name'];
                                     $itemRelativePath = $buildRelativePathForChild($relativePath, $itemName);
+                                    $iconClass = $getIconClass($item);
                                     ?>
-                                    <tr>
+                                    <tr
+                                        draggable="true"
+                                        data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>"
+                                        <?php if ($item['isDirectory']): ?>
+                                            data-folder-target="1"
+                                            data-folder-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>"
+                                        <?php endif; ?>
+                                    >
                                         <td>
                                             <?php if ($item['isDirectory']): ?>
                                                 <a href="documents.php?path=<?php echo rawurlencode($itemRelativePath); ?>">
-                                                    <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
+                                                    <span class="glyphicon <?php echo $iconClass; ?>" aria-hidden="true"></span>
                                                     <?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>
                                                 </a>
                                             <?php else: ?>
                                                 <a href="<?php echo $buildPublicFileLink($itemRelativePath); ?>" target="_blank">
-                                                    <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
+                                                    <span class="glyphicon <?php echo $iconClass; ?>" aria-hidden="true"></span>
                                                     <?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>
                                                 </a>
                                             <?php endif; ?>
@@ -428,20 +502,25 @@ entete('Documents', 'Documents', '5');
                                         <td><?php echo $item['isDirectory'] ? 'Dossier de fichiers' : 'Fichier'; ?></td>
                                         <td><?php echo $item['isDirectory'] ? '' : number_format((float) $item['size'] / 1024, 1, ',', ' ') . ' Ko'; ?></td>
                                         <td>
-                                            <form method="post" class="form-inline">
-                                                <input type="hidden" name="action" value="rename_item">
-                                                <input type="hidden" name="item_name" value="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>">
-                                                <div class="form-group">
-                                                    <label class="sr-only">Nouveau nom</label>
-                                                    <input type="text" class="form-control input-sm" name="new_name" placeholder="Nouveau nom" required>
-                                                </div>
-                                                <button type="submit" class="btn btn-default btn-sm">Renommer</button>
-                                            </form>
-                                            <form method="post" class="form-inline" onsubmit="return confirm('Confirmer la suppression ?');">
-                                                <input type="hidden" name="action" value="delete_item">
-                                                <input type="hidden" name="item_name" value="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>">
-                                                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
-                                            </form>
+                                            <div class="dropdown">
+                                                <button class="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    ...
+                                                    <span class="caret"></span>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-right">
+                                                    <li>
+                                                        <a href="#" class="rename-trigger" data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>" data-toggle="modal" data-target="#renameModal">Renommer</a>
+                                                    </li>
+                                                    <li role="separator" class="divider"></li>
+                                                    <li>
+                                                        <form method="post" onsubmit="return confirm('Confirmer la suppression ?');" style="margin: 0;">
+                                                            <input type="hidden" name="action" value="delete_item">
+                                                            <input type="hidden" name="item_name" value="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>">
+                                                            <button type="submit" class="btn btn-link btn-block text-left">Supprimer</button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -455,11 +534,49 @@ entete('Documents', 'Documents', '5');
     </div>
 </div>
 
+<form method="post" id="move-form" style="display: none;">
+    <input type="hidden" name="action" value="move_item">
+    <input type="hidden" name="item_name" id="move-item-name">
+    <input type="hidden" name="target_folder" id="move-target-folder">
+</form>
+
+<div class="modal fade" id="renameModal" tabindex="-1" role="dialog" aria-labelledby="renameModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form method="post">
+                <input type="hidden" name="action" value="rename_item">
+                <input type="hidden" name="item_name" id="rename-item-name">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="renameModalLabel">Renommer</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="rename-new-name">Nouveau nom</label>
+                        <input type="text" class="form-control" id="rename-new-name" name="new_name" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     (function () {
         const dropzone = document.getElementById('documents-dropzone');
         const fileInput = document.getElementById('documents-input');
         const uploadForm = document.getElementById('upload-form');
+        const renameButtons = document.querySelectorAll('.rename-trigger');
+        const renameItemNameInput = document.getElementById('rename-item-name');
+        const renameNewNameInput = document.getElementById('rename-new-name');
+        const moveForm = document.getElementById('move-form');
+        const moveItemInput = document.getElementById('move-item-name');
+        const moveTargetInput = document.getElementById('move-target-folder');
+        const tableRows = document.querySelectorAll('tr[data-item-name]');
 
         if (!dropzone || !fileInput || !uploadForm) {
             return;
@@ -505,6 +622,46 @@ entete('Documents', 'Documents', '5');
             });
             fileInput.files = dataTransfer.files;
             uploadForm.submit();
+        });
+
+        Array.prototype.forEach.call(renameButtons, function (button) {
+            button.addEventListener('click', function () {
+                const itemName = button.getAttribute('data-item-name') || '';
+                renameItemNameInput.value = itemName;
+                renameNewNameInput.value = itemName;
+            });
+        });
+
+        Array.prototype.forEach.call(tableRows, function (row) {
+            row.addEventListener('dragstart', function (event) {
+                event.dataTransfer.setData('text/plain', row.getAttribute('data-item-name') || '');
+            });
+
+            if (row.getAttribute('data-folder-target') === '1') {
+                row.addEventListener('dragover', function (event) {
+                    event.preventDefault();
+                    row.classList.add('active');
+                });
+
+                row.addEventListener('dragleave', function () {
+                    row.classList.remove('active');
+                });
+
+                row.addEventListener('drop', function (event) {
+                    event.preventDefault();
+                    row.classList.remove('active');
+                    const sourceItem = event.dataTransfer.getData('text/plain');
+                    const targetFolder = row.getAttribute('data-folder-name') || '';
+
+                    if (!sourceItem || !targetFolder || sourceItem === targetFolder) {
+                        return;
+                    }
+
+                    moveItemInput.value = sourceItem;
+                    moveTargetInput.value = targetFolder;
+                    moveForm.submit();
+                });
+            }
         });
     })();
 </script>
