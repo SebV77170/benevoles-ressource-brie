@@ -30,9 +30,74 @@ $setFlashMessage = static function (string $type, string $text): void {
 
 $normalizeName = static function (string $name): string {
     $name = trim($name);
+    $name = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name) ?: $name;
     $name = str_replace(['/', '\\'], '-', $name);
     $name = preg_replace('/[^A-Za-z0-9._ -]/', '_', $name);
-    return trim((string) $name);
+    $name = trim((string) $name, " .");
+    if ($name === '') {
+        return '';
+    }
+
+    return $name;
+};
+
+$normalizeDisplayName = static function (string $name): string {
+    $name = trim($name);
+    $name = str_replace(["\0", '/', '\\'], '', $name);
+    return trim($name);
+};
+
+$getDirectoryMetadataPath = static function (string $absoluteDirectory): string {
+    return rtrim($absoluteDirectory, '/') . '/.display_names.json';
+};
+
+$loadDirectoryMetadata = static function (string $absoluteDirectory) use ($getDirectoryMetadataPath): array {
+    $metadataPath = $getDirectoryMetadataPath($absoluteDirectory);
+    if (!is_file($metadataPath)) {
+        return [];
+    }
+
+    $rawContent = file_get_contents($metadataPath);
+    if ($rawContent === false || $rawContent === '') {
+        return [];
+    }
+
+    $decoded = json_decode($rawContent, true);
+    if (!is_array($decoded)) {
+        return [];
+    }
+
+    return $decoded;
+};
+
+$saveDirectoryMetadata = static function (string $absoluteDirectory, array $metadata) use ($getDirectoryMetadataPath): void {
+    ksort($metadata);
+    $metadataPath = $getDirectoryMetadataPath($absoluteDirectory);
+    file_put_contents($metadataPath, json_encode($metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+};
+
+$setDisplayNameForItem = static function (string $absoluteDirectory, string $storedName, string $displayName) use ($loadDirectoryMetadata, $saveDirectoryMetadata): void {
+    if ($storedName === '' || $displayName === '') {
+        return;
+    }
+
+    $metadata = $loadDirectoryMetadata($absoluteDirectory);
+    $metadata[$storedName] = $displayName;
+    $saveDirectoryMetadata($absoluteDirectory, $metadata);
+};
+
+$removeDisplayNameForItem = static function (string $absoluteDirectory, string $storedName) use ($loadDirectoryMetadata, $saveDirectoryMetadata): void {
+    if ($storedName === '') {
+        return;
+    }
+
+    $metadata = $loadDirectoryMetadata($absoluteDirectory);
+    if (!array_key_exists($storedName, $metadata)) {
+        return;
+    }
+
+    unset($metadata[$storedName]);
+    $saveDirectoryMetadata($absoluteDirectory, $metadata);
 };
 
 $sanitizeExistingItemName = static function (?string $name): string {
@@ -105,9 +170,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'create_folder') {
-        $folderName = $normalizeName($_POST['folder_name'] ?? '');
+        $requestedFolderName = $normalizeDisplayName($_POST['folder_name'] ?? '');
+        $folderName = $normalizeName($requestedFolderName);
 
-        if ($folderName === '') {
+        if ($folderName === '' || $requestedFolderName === '') {
             $setFlashMessage('error', 'Nom de dossier invalide.');
             $redirectToCurrentPath($relativePath);
         }
@@ -119,6 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (mkdir($newFolderPath, 0775, true)) {
+            $setDisplayNameForItem($currentDirectory, $folderName, $requestedFolderName);
             $setFlashMessage('success', 'Dossier créé avec succès.');
         } else {
             $setFlashMessage('error', 'Impossible de créer le dossier.');
@@ -129,9 +196,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'rename_item') {
         $itemName = $sanitizeExistingItemName($_POST['item_name'] ?? '');
-        $newName = $normalizeName($_POST['new_name'] ?? '');
+        $requestedDisplayName = $normalizeDisplayName($_POST['new_name'] ?? '');
+        $newName = $normalizeName($requestedDisplayName);
 
-        if ($itemName === '' || $newName === '') {
+        if ($itemName === '' || $newName === '' || $requestedDisplayName === '') {
             $setFlashMessage('error', 'Renommage invalide.');
             $redirectToCurrentPath($relativePath);
         }
@@ -150,6 +218,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (rename($sourcePath, $destinationPath)) {
+            $removeDisplayNameForItem($currentDirectory, $itemName);
+            $setDisplayNameForItem($currentDirectory, $newName, $requestedDisplayName);
             $setFlashMessage('success', 'Élément renommé avec succès.');
         } else {
             $setFlashMessage('error', 'Impossible de renommer l\'élément.');
@@ -183,6 +253,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($deleted) {
+            $removeDisplayNameForItem($currentDirectory, $itemName);
             $setFlashMessage('success', 'Élément supprimé.');
         } else {
             $setFlashMessage('error', 'Impossible de supprimer l\'élément.');
@@ -224,6 +295,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (rename($sourcePath, $destinationPath)) {
+            $currentMetadata = $loadDirectoryMetadata($currentDirectory);
+            if (isset($currentMetadata[$itemName])) {
+                $setDisplayNameForItem($targetDirectory, $itemName, (string) $currentMetadata[$itemName]);
+                $removeDisplayNameForItem($currentDirectory, $itemName);
+            }
             $setFlashMessage('success', 'Élément déplacé avec succès.');
         } else {
             $setFlashMessage('error', 'Impossible de déplacer l\'élément.');
@@ -243,7 +319,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $originalName = basename((string) $documents['name'][$index]);
-            $safeName = $normalizeName($originalName);
+            $displayName = $normalizeDisplayName($originalName);
+            $safeName = $normalizeName($displayName);
             if ($safeName === '') {
                 continue;
             }
@@ -253,13 +330,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $filename = $pathInfo['filename'] ?? 'document';
             $extension = isset($pathInfo['extension']) ? '.' . $pathInfo['extension'] : '';
             $counter = 1;
+            $finalSafeName = $safeName;
+            $finalDisplayName = $displayName;
 
             while (file_exists($targetPath)) {
-                $targetPath = $currentDirectory . '/' . $filename . '_' . $counter . $extension;
+                $finalSafeName = $filename . '_' . $counter . $extension;
+                $finalDisplayName = $displayName . ' (' . $counter . ')';
+                $targetPath = $currentDirectory . '/' . $finalSafeName;
                 $counter++;
             }
 
             if (move_uploaded_file($documents['tmp_name'][$index], $targetPath)) {
+                $setDisplayNameForItem($currentDirectory, $finalSafeName, $finalDisplayName);
                 $uploadedCount++;
             }
         }
@@ -275,10 +357,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $items = [];
+$currentDirectoryMetadata = $loadDirectoryMetadata($currentDirectory);
 $scanResult = scandir($currentDirectory);
 if ($scanResult !== false) {
     foreach ($scanResult as $item) {
-        if ($item === '.' || $item === '..') {
+        if ($item === '.' || $item === '..' || $item === '.display_names.json') {
             continue;
         }
 
@@ -286,6 +369,7 @@ if ($scanResult !== false) {
         $isDirectory = is_dir($itemPath);
         $items[] = [
             'name' => $item,
+            'displayName' => $currentDirectoryMetadata[$item] ?? $item,
             'isDirectory' => $isDirectory,
             'size' => $isDirectory ? null : filesize($itemPath),
             'modifiedAt' => filemtime($itemPath)
@@ -298,10 +382,19 @@ usort($items, static function (array $left, array $right): int {
         return $left['isDirectory'] ? -1 : 1;
     }
 
-    return strcasecmp($left['name'], $right['name']);
+    return strcasecmp($left['displayName'], $right['displayName']);
 });
 
 $pathSegments = $relativePath === '' ? [] : explode('/', $relativePath);
+$displayPathSegments = [];
+if (!empty($pathSegments)) {
+    $runningAbsolutePath = $baseDirectoryRealPath;
+    foreach ($pathSegments as $segment) {
+        $metadata = $loadDirectoryMetadata($runningAbsolutePath);
+        $displayPathSegments[] = $metadata[$segment] ?? $segment;
+        $runningAbsolutePath .= '/' . $segment;
+    }
+}
 
 $buildRelativePathForChild = static function (string $parentPath, string $child): string {
     return trim($parentPath . '/' . $child, '/');
@@ -339,15 +432,16 @@ $getIconClass = static function (array $item): string {
 };
 
 $buildFolderTree = null;
-$buildFolderTree = static function (string $absolutePath, string $relative) use (&$buildFolderTree): array {
+$buildFolderTree = static function (string $absolutePath, string $relative) use (&$buildFolderTree, $loadDirectoryMetadata): array {
     $children = [];
+    $metadata = $loadDirectoryMetadata($absolutePath);
     $entries = scandir($absolutePath);
     if ($entries === false) {
         return $children;
     }
 
     foreach ($entries as $entry) {
-        if ($entry === '.' || $entry === '..') {
+        if ($entry === '.' || $entry === '..' || $entry === '.display_names.json') {
             continue;
         }
 
@@ -359,13 +453,14 @@ $buildFolderTree = static function (string $absolutePath, string $relative) use 
         $childRelativePath = trim($relative . '/' . $entry, '/');
         $children[] = [
             'name' => $entry,
+            'displayName' => $metadata[$entry] ?? $entry,
             'path' => $childRelativePath,
             'children' => $buildFolderTree($childAbsolutePath, $childRelativePath)
         ];
     }
 
     usort($children, static function (array $left, array $right): int {
-        return strcasecmp($left['name'], $right['name']);
+        return strcasecmp($left['displayName'], $right['displayName']);
     });
 
     return $children;
@@ -405,12 +500,12 @@ entete('Documents', 'Documents', '5');
                 <li><a href="documents.php">Racine</a></li>
                 <?php
                 $breadcrumbPath = '';
-                foreach ($pathSegments as $segment):
+                foreach ($pathSegments as $segmentIndex => $segment):
                     $breadcrumbPath = $buildRelativePathForChild($breadcrumbPath, $segment);
                 ?>
                     <li>
                         <a href="documents.php?path=<?php echo rawurlencode($breadcrumbPath); ?>">
-                            <?php echo htmlspecialchars($segment, ENT_QUOTES, 'UTF-8'); ?>
+                            <?php echo htmlspecialchars($displayPathSegments[$segmentIndex] ?? $segment, ENT_QUOTES, 'UTF-8'); ?>
                         </a>
                     </li>
                 <?php endforeach; ?>
@@ -442,7 +537,7 @@ entete('Documents', 'Documents', '5');
                                 <li class="<?php echo $currentPath === $node['path'] ? 'active' : ''; ?>">
                                     <a href="documents.php?path=<?php echo rawurlencode($node['path']); ?>">
                                         <i class="fa-solid fa-folder-open"></i>
-                                        <?php echo htmlspecialchars($node['name'], ENT_QUOTES, 'UTF-8'); ?>
+                                        <?php echo htmlspecialchars($node['displayName'], ENT_QUOTES, 'UTF-8'); ?>
                                     </a>
                                 </li>
                                 <?php $renderTree($node['children'], $currentPath, $depth + 1); ?>
@@ -460,7 +555,7 @@ entete('Documents', 'Documents', '5');
             <div class="panel panel-default">
                 <div class="panel-heading">
                     Dossier courant :
-                    <strong><?php echo $relativePath === '' ? 'Racine' : htmlspecialchars($relativePath, ENT_QUOTES, 'UTF-8'); ?></strong>
+                    <strong><?php echo $relativePath === '' ? 'Racine' : htmlspecialchars(implode(' / ', $displayPathSegments), ENT_QUOTES, 'UTF-8'); ?></strong>
                 </div>
 
                 <div class="panel-body">
@@ -522,6 +617,7 @@ entete('Documents', 'Documents', '5');
                             <?php foreach ($items as $item): ?>
                                 <?php
                                 $itemName = $item['name'];
+                                $itemDisplayName = $item['displayName'];
                                 $itemRelativePath = $buildRelativePathForChild($relativePath, $itemName);
                                 ?>
 
@@ -537,12 +633,12 @@ entete('Documents', 'Documents', '5');
                                         <?php if ($item['isDirectory']): ?>
                                             <a href="documents.php?path=<?php echo rawurlencode($itemRelativePath); ?>" draggable="<?php echo $isAdmin ? 'true' : 'false'; ?>" data-item-name="<?php echo htmlspecialchars($itemName); ?>">
                                                 <i class="fa-solid fa-folder"></i>
-                                                <?php echo htmlspecialchars($itemName); ?>
+                                                <?php echo htmlspecialchars($itemDisplayName, ENT_QUOTES, 'UTF-8'); ?>
                                             </a>
                                         <?php else: ?>
                                             <a href="<?php echo $buildPublicFileLink($itemRelativePath); ?>" target="_blank" draggable="<?php echo $isAdmin ? 'true' : 'false'; ?>" data-item-name="<?php echo htmlspecialchars($itemName); ?>">
                                                 <i class="fa-solid fa-file"></i>
-                                                <?php echo htmlspecialchars($itemName); ?>
+                                                <?php echo htmlspecialchars($itemDisplayName, ENT_QUOTES, 'UTF-8'); ?>
                                             </a>
                                         <?php endif; ?>
                                     </td>
@@ -566,6 +662,7 @@ entete('Documents', 'Documents', '5');
                                                     type="button"
                                                     class="btn btn-default rename-trigger"
                                                     data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>"
+                                                    data-item-display-name="<?php echo htmlspecialchars($itemDisplayName, ENT_QUOTES, 'UTF-8'); ?>"
                                                     title="Renommer"
                                                 >
                                                     <i class="fa-solid fa-pen"></i>
@@ -575,6 +672,7 @@ entete('Documents', 'Documents', '5');
                                                     type="button"
                                                     class="btn btn-danger delete-trigger"
                                                     data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>"
+                                                    data-item-display-name="<?php echo htmlspecialchars($itemDisplayName, ENT_QUOTES, 'UTF-8'); ?>"
                                                     title="Supprimer"
                                                 >
                                                     <i class="fa-solid fa-trash"></i>
@@ -738,8 +836,9 @@ entete('Documents', 'Documents', '5');
             }
 
             const itemName = button.getAttribute('data-item-name') || '';
+            const itemDisplayName = button.getAttribute('data-item-display-name') || itemName;
             renameItemNameInput.value = itemName;
-            renameNewNameInput.value = itemName;
+            renameNewNameInput.value = itemDisplayName;
 
             if (window.jQuery) {
                 window.jQuery('#renameModal').modal('show');
@@ -759,8 +858,9 @@ entete('Documents', 'Documents', '5');
             }
 
             const itemName = button.getAttribute('data-item-name') || '';
+            const itemDisplayName = button.getAttribute('data-item-display-name') || itemName;
             deleteItemNameInput.value = itemName;
-            deleteItemLabel.textContent = itemName;
+            deleteItemLabel.textContent = itemDisplayName;
 
             if (window.jQuery) {
                 window.jQuery('#deleteModal').modal('show');
