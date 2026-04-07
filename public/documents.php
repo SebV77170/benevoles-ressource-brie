@@ -7,6 +7,8 @@ require('../src/config.php');
 require '../actions/users/userdefinition.php';
 require '../actions/users/security1.php';
 
+$isAdmin = (int) $users->getAdmin() === 2;
+
 $baseDirectoryPath = dirname(__DIR__) . '/fichiers';
 if (!is_dir($baseDirectoryPath)) {
     mkdir($baseDirectoryPath, 0775, true);
@@ -95,6 +97,12 @@ $redirectToCurrentPath = static function (string $path): void {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
+    $adminOnlyActions = ['create_folder', 'rename_item', 'delete_item', 'move_item', 'upload'];
+
+    if (in_array($action, $adminOnlyActions, true) && !$isAdmin) {
+        $setFlashMessage('error', 'Action non autorisée. Seuls les administrateurs peuvent modifier les documents.');
+        $redirectToCurrentPath($relativePath);
+    }
 
     if ($action === 'create_folder') {
         $folderName = $normalizeName($_POST['folder_name'] ?? '');
@@ -457,38 +465,46 @@ entete('Documents', 'Documents', '5');
 
                 <div class="panel-body">
 
-                    <!-- ACTIONS -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <form method="post" class="form-inline">
-                                <input type="hidden" name="action" value="create_folder">
-                                <input type="text" class="form-control input-sm" name="folder_name" placeholder="Nouveau dossier" required>
-                                <button type="submit" class="btn btn-primary btn-sm">
-                                    <i class="fa-solid fa-folder-plus"></i> Nouveau
-                                </button>
-                            </form>
-                        </div>
+                    <?php if ($isAdmin): ?>
+                        <!-- ACTIONS -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <form method="post" class="form-inline">
+                                    <input type="hidden" name="action" value="create_folder">
+                                    <input type="text" class="form-control input-sm" name="folder_name" placeholder="Nouveau dossier" required>
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="fa-solid fa-folder-plus"></i> Nouveau
+                                    </button>
+                                </form>
+                            </div>
 
-                        <div class="col-md-6">
-                            <form method="post" enctype="multipart/form-data" id="upload-form" class="form-inline">
-                                <input type="hidden" name="action" value="upload">
-                                <input type="file" class="form-control input-sm" name="documents[]" id="documents-input" multiple>
-                                <button type="submit" class="btn btn-success btn-sm">
-                                    <i class="fa-solid fa-upload"></i> Envoyer
-                                </button>
-                            </form>
+                            <div class="col-md-6">
+                                <form method="post" enctype="multipart/form-data" id="upload-form" class="form-inline">
+                                    <input type="hidden" name="action" value="upload">
+                                    <input type="file" class="form-control input-sm" name="documents[]" id="documents-input" multiple>
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="fa-solid fa-upload"></i> Envoyer
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-                    </div>
+                    <?php else: ?>
+                        <div class="alert alert-info" role="alert">
+                            Consultation uniquement : les actions de modification sont réservées aux administrateurs.
+                        </div>
+                    <?php endif; ?>
 
                     <hr>
 
-                    <!-- DROPZONE -->
-                    <div id="documents-dropzone" class="panel panel-info">
-                        <div class="panel-body text-center">
-                            <i class="fa-solid fa-cloud-arrow-up fa-2x"></i><br>
-                            Glissez-déposez vos fichiers ici.
+                    <?php if ($isAdmin): ?>
+                        <!-- DROPZONE -->
+                        <div id="documents-dropzone" class="panel panel-info">
+                            <div class="panel-body text-center">
+                                <i class="fa-solid fa-cloud-arrow-up fa-2x"></i><br>
+                                Glissez-déposez vos fichiers ici.
+                            </div>
                         </div>
-                    </div>
+                    <?php endif; ?>
 
                     <!-- TABLE -->
                     <table class="table table-striped table-bordered table-hover">
@@ -519,12 +535,12 @@ entete('Documents', 'Documents', '5');
                                     <!-- NOM -->
                                     <td>
                                         <?php if ($item['isDirectory']): ?>
-                                            <a href="documents.php?path=<?php echo rawurlencode($itemRelativePath); ?>" draggable="true" data-item-name="<?php echo htmlspecialchars($itemName); ?>">
+                                            <a href="documents.php?path=<?php echo rawurlencode($itemRelativePath); ?>" draggable="<?php echo $isAdmin ? 'true' : 'false'; ?>" data-item-name="<?php echo htmlspecialchars($itemName); ?>">
                                                 <i class="fa-solid fa-folder"></i>
                                                 <?php echo htmlspecialchars($itemName); ?>
                                             </a>
                                         <?php else: ?>
-                                            <a href="<?php echo $buildPublicFileLink($itemRelativePath); ?>" target="_blank" draggable="true" data-item-name="<?php echo htmlspecialchars($itemName); ?>">
+                                            <a href="<?php echo $buildPublicFileLink($itemRelativePath); ?>" target="_blank" draggable="<?php echo $isAdmin ? 'true' : 'false'; ?>" data-item-name="<?php echo htmlspecialchars($itemName); ?>">
                                                 <i class="fa-solid fa-file"></i>
                                                 <?php echo htmlspecialchars($itemName); ?>
                                             </a>
@@ -544,25 +560,27 @@ entete('Documents', 'Documents', '5');
 
                                     <!-- ACTIONS -->
                                     <td class="actions-cell">
-                                        <div class="btn-group btn-group-xs" role="group" aria-label="Actions fichier">
-                                            <button
-                                                type="button"
-                                                class="btn btn-default rename-trigger"
-                                                data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>"
-                                                title="Renommer"
-                                            >
-                                                <i class="fa-solid fa-pen"></i>
-                                            </button>
+                                        <?php if ($isAdmin): ?>
+                                            <div class="btn-group btn-group-xs" role="group" aria-label="Actions fichier">
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-default rename-trigger"
+                                                    data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>"
+                                                    title="Renommer"
+                                                >
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
 
-                                            <button
-                                                type="button"
-                                                class="btn btn-danger delete-trigger"
-                                                data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>"
-                                                title="Supprimer"
-                                            >
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
-                                        </div>
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-danger delete-trigger"
+                                                    data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>"
+                                                    title="Supprimer"
+                                                >
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
 
@@ -576,68 +594,70 @@ entete('Documents', 'Documents', '5');
     </div>
 </div>
 
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form method="post">
-                <input type="hidden" name="action" value="delete_item">
-                <input type="hidden" name="item_name" id="delete-item-name">
+<?php if ($isAdmin): ?>
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="post">
+                    <input type="hidden" name="action" value="delete_item">
+                    <input type="hidden" name="item_name" id="delete-item-name">
 
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <h4 class="modal-title" id="deleteModalLabel">Confirmer la suppression</h4>
-                </div>
-
-                <div class="modal-body">
-                    <p>Voulez-vous vraiment supprimer <strong id="delete-item-label"></strong> ?</p>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-danger">Supprimer</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<form method="post" id="move-form" style="display:none;">
-    <input type="hidden" name="action" value="move_item">
-    <input type="hidden" name="item_name" id="move-item-name">
-    <input type="hidden" name="target_folder" id="move-target-folder">
-</form>
-
-<div class="modal fade" id="renameModal" tabindex="-1" role="dialog" aria-labelledby="renameModalLabel">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form method="post">
-                <input type="hidden" name="action" value="rename_item">
-                <input type="hidden" name="item_name" id="rename-item-name">
-
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <h4 class="modal-title" id="renameModalLabel">Renommer</h4>
-                </div>
-
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="rename-new-name">Nouveau nom</label>
-                        <input type="text" class="form-control" id="rename-new-name" name="new_name" required>
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="deleteModalLabel">Confirmer la suppression</h4>
                     </div>
-                </div>
 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-primary">Enregistrer</button>
-                </div>
-            </form>
+                    <div class="modal-body">
+                        <p>Voulez-vous vraiment supprimer <strong id="delete-item-label"></strong> ?</p>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-danger">Supprimer</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
+
+    <form method="post" id="move-form" style="display:none;">
+        <input type="hidden" name="action" value="move_item">
+        <input type="hidden" name="item_name" id="move-item-name">
+        <input type="hidden" name="target_folder" id="move-target-folder">
+    </form>
+
+    <div class="modal fade" id="renameModal" tabindex="-1" role="dialog" aria-labelledby="renameModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="post">
+                    <input type="hidden" name="action" value="rename_item">
+                    <input type="hidden" name="item_name" id="rename-item-name">
+
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="renameModalLabel">Renommer</h4>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="rename-new-name">Nouveau nom</label>
+                            <input type="text" class="form-control" id="rename-new-name" name="new_name" required>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
 
 <script>
 (function () {
