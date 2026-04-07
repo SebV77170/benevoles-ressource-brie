@@ -511,13 +511,15 @@ entete('Documents', 'Documents', '5');
                                         <td><?php echo date('d/m/Y H:i', (int) $item['modifiedAt']); ?></td>
                                         <td><?php echo $item['isDirectory'] ? 'Dossier de fichiers' : 'Fichier'; ?></td>
                                         <td><?php echo $item['isDirectory'] ? '' : number_format((float) $item['size'] / 1024, 1, ',', ' ') . ' Ko'; ?></td>
-                                        <td>
-                                            <button type="button" class="btn btn-link btn-xs rename-trigger" data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>" data-toggle="modal" data-target="#renameModal" title="Renommer">
-                                                <span class="glyphicon glyphicon-pencil"></span>
-                                            </button>
-                                            <button type="button" class="btn btn-link btn-xs delete-trigger text-danger" data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>" data-toggle="modal" data-target="#deleteModal" title="Supprimer">
-                                                <span class="glyphicon glyphicon-trash"></span>
-                                            </button>
+                                        <td class="text-nowrap" style="position: relative; z-index: 2;">
+                                            <div class="btn-group btn-group-xs" role="group" aria-label="Actions fichier">
+                                                <button type="button" draggable="false" class="btn btn-default rename-trigger" data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>" data-toggle="modal" data-target="#renameModal" title="Renommer">
+                                                    <span class="glyphicon glyphicon-pencil"></span>
+                                                </button>
+                                                <button type="button" draggable="false" class="btn btn-danger delete-trigger" data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>" data-toggle="modal" data-target="#deleteModal" title="Supprimer">
+                                                    <span class="glyphicon glyphicon-trash"></span>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -645,6 +647,9 @@ entete('Documents', 'Documents', '5');
         }
 
         Array.prototype.forEach.call(renameButtons, function (button) {
+            button.addEventListener('mousedown', function (event) {
+                event.stopPropagation();
+            });
             button.addEventListener('click', function () {
                 const itemName = button.getAttribute('data-item-name') || '';
                 renameItemNameInput.value = itemName;
@@ -685,6 +690,9 @@ entete('Documents', 'Documents', '5');
         });
 
         Array.prototype.forEach.call(deleteButtons, function (button) {
+            button.addEventListener('mousedown', function (event) {
+                event.stopPropagation();
+            });
             button.addEventListener('click', function () {
                 const itemName = button.getAttribute('data-item-name') || '';
                 deleteItemNameInput.value = itemName;
