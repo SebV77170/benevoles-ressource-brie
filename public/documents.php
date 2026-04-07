@@ -368,6 +368,20 @@ $folderTree = $buildFolderTree($baseDirectoryRealPath, '');
 entete('Documents', 'Documents', '5');
 ?>
 
+<style>
+    .actions-cell {
+        white-space: nowrap;
+    }
+
+    .actions-cell .btn {
+        cursor: pointer;
+    }
+
+    tr.active {
+        background-color: #f5f5f5 !important;
+    }
+</style>
+
 <div class="container">
     <div class="row">
         <div class="col-xs-12">
@@ -385,89 +399,100 @@ entete('Documents', 'Documents', '5');
                 $breadcrumbPath = '';
                 foreach ($pathSegments as $segment):
                     $breadcrumbPath = $buildRelativePathForChild($breadcrumbPath, $segment);
-                    ?>
-                    <li><a href="documents.php?path=<?php echo rawurlencode($breadcrumbPath); ?>"><?php echo htmlspecialchars($segment, ENT_QUOTES, 'UTF-8'); ?></a></li>
+                ?>
+                    <li>
+                        <a href="documents.php?path=<?php echo rawurlencode($breadcrumbPath); ?>">
+                            <?php echo htmlspecialchars($segment, ENT_QUOTES, 'UTF-8'); ?>
+                        </a>
+                    </li>
                 <?php endforeach; ?>
             </ol>
         </div>
     </div>
 
     <div class="row">
+        <!-- ARBORESCENCE -->
         <div class="col-sm-4 col-md-3">
             <div class="panel panel-default">
                 <div class="panel-heading">Arborescence</div>
                 <div class="panel-body">
                     <ul class="nav nav-pills nav-stacked">
                         <li class="<?php echo $relativePath === '' ? 'active' : ''; ?>">
-                            <a href="documents.php"><span class="glyphicon glyphicon-hdd"></span> Racine</a>
+                            <a href="documents.php">
+                                <i class="fa-solid fa-hard-drive"></i> Racine
+                            </a>
                         </li>
                     </ul>
+
                     <?php
                     $renderTree = null;
                     $renderTree = static function (array $nodes, string $currentPath, int $depth = 0) use (&$renderTree): void {
-                        if (count($nodes) === 0) {
-                            return;
-                        }
-                        ?>
+                        if (count($nodes) === 0) return;
+                    ?>
                         <ul class="nav nav-pills nav-stacked" style="margin-left: <?php echo (int) ($depth * 14); ?>px;">
                             <?php foreach ($nodes as $node): ?>
                                 <li class="<?php echo $currentPath === $node['path'] ? 'active' : ''; ?>">
                                     <a href="documents.php?path=<?php echo rawurlencode($node['path']); ?>">
-                                        <span class="glyphicon glyphicon-folder-open"></span>
+                                        <i class="fa-solid fa-folder-open"></i>
                                         <?php echo htmlspecialchars($node['name'], ENT_QUOTES, 'UTF-8'); ?>
                                     </a>
                                 </li>
                                 <?php $renderTree($node['children'], $currentPath, $depth + 1); ?>
                             <?php endforeach; ?>
                         </ul>
-                        <?php
-                    };
+                    <?php };
                     $renderTree($folderTree, $relativePath);
                     ?>
                 </div>
             </div>
         </div>
+
+        <!-- LISTE DES FICHIERS -->
         <div class="col-sm-8 col-md-9">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     Dossier courant :
                     <strong><?php echo $relativePath === '' ? 'Racine' : htmlspecialchars($relativePath, ENT_QUOTES, 'UTF-8'); ?></strong>
                 </div>
+
                 <div class="panel-body">
+
+                    <!-- ACTIONS -->
                     <div class="row">
                         <div class="col-md-6">
                             <form method="post" class="form-inline">
                                 <input type="hidden" name="action" value="create_folder">
-                                <div class="form-group">
-                                    <label class="sr-only" for="folder_name">Nom du dossier</label>
-                                    <input type="text" class="form-control input-sm" id="folder_name" name="folder_name" placeholder="Nouveau dossier" required>
-                                </div>
+                                <input type="text" class="form-control input-sm" name="folder_name" placeholder="Nouveau dossier" required>
                                 <button type="submit" class="btn btn-primary btn-sm">
-                                    <span class="glyphicon glyphicon-plus"></span> Nouveau dossier
+                                    <i class="fa-solid fa-folder-plus"></i> Nouveau
                                 </button>
                             </form>
                         </div>
+
                         <div class="col-md-6">
                             <form method="post" enctype="multipart/form-data" id="upload-form" class="form-inline">
                                 <input type="hidden" name="action" value="upload">
-                                <div class="form-group">
-                                    <label class="sr-only" for="documents-input">Fichiers</label>
-                                    <input type="file" class="form-control input-sm" name="documents[]" id="documents-input" multiple>
-                                </div>
+                                <input type="file" class="form-control input-sm" name="documents[]" id="documents-input" multiple>
                                 <button type="submit" class="btn btn-success btn-sm">
-                                    <span class="glyphicon glyphicon-upload"></span> Envoyer
+                                    <i class="fa-solid fa-upload"></i> Envoyer
                                 </button>
                             </form>
                         </div>
                     </div>
+
                     <hr>
+
+                    <!-- DROPZONE -->
                     <div id="documents-dropzone" class="panel panel-info">
                         <div class="panel-body text-center">
+                            <i class="fa-solid fa-cloud-arrow-up fa-2x"></i><br>
                             Glissez-déposez vos fichiers ici.
                         </div>
                     </div>
+
+                    <!-- TABLE -->
                     <table class="table table-striped table-bordered table-hover">
-                            <thead>
+                        <thead>
                             <tr>
                                 <th>Nom</th>
                                 <th>Modifié le</th>
@@ -475,57 +500,76 @@ entete('Documents', 'Documents', '5');
                                 <th>Taille</th>
                                 <th>Actions</th>
                             </tr>
-                            </thead>
-                            <tbody>
-                            <?php if (count($items) === 0): ?>
-                                <tr>
-                                    <td colspan="5">Ce dossier est vide.</td>
-                                </tr>
-                            <?php else: ?>
-                                <?php foreach ($items as $item): ?>
-                                    <?php
-                                    $itemName = $item['name'];
-                                    $itemRelativePath = $buildRelativePathForChild($relativePath, $itemName);
-                                    $iconClass = $getIconClass($item);
-                                    ?>
-                                    <tr
-                                        data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>"
+                        </thead>
+
+                        <tbody>
+                            <?php foreach ($items as $item): ?>
+                                <?php
+                                $itemName = $item['name'];
+                                $itemRelativePath = $buildRelativePathForChild($relativePath, $itemName);
+                                ?>
+
+                                <tr
+                                    data-item-name="<?php echo htmlspecialchars($itemName); ?>"
+                                    <?php if ($item['isDirectory']): ?>
+                                        data-folder-target="1"
+                                        data-folder-name="<?php echo htmlspecialchars($itemName); ?>"
+                                    <?php endif; ?>
+                                >
+                                    <!-- NOM -->
+                                    <td>
                                         <?php if ($item['isDirectory']): ?>
-                                            data-folder-target="1"
-                                            data-folder-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>"
+                                            <a href="documents.php?path=<?php echo rawurlencode($itemRelativePath); ?>" draggable="true" data-item-name="<?php echo htmlspecialchars($itemName); ?>">
+                                                <i class="fa-solid fa-folder"></i>
+                                                <?php echo htmlspecialchars($itemName); ?>
+                                            </a>
+                                        <?php else: ?>
+                                            <a href="<?php echo $buildPublicFileLink($itemRelativePath); ?>" target="_blank" draggable="true" data-item-name="<?php echo htmlspecialchars($itemName); ?>">
+                                                <i class="fa-solid fa-file"></i>
+                                                <?php echo htmlspecialchars($itemName); ?>
+                                            </a>
                                         <?php endif; ?>
-                                    >
-                                        <td>
-                                            <?php if ($item['isDirectory']): ?>
-                                                <a href="documents.php?path=<?php echo rawurlencode($itemRelativePath); ?>" draggable="true" data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>">
-                                                    <span class="glyphicon <?php echo $iconClass; ?>" aria-hidden="true"></span>
-                                                    <?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>
-                                                </a>
-                                            <?php else: ?>
-                                                <a href="<?php echo $buildPublicFileLink($itemRelativePath); ?>" target="_blank" draggable="true" data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>">
-                                                    <span class="glyphicon <?php echo $iconClass; ?>" aria-hidden="true"></span>
-                                                    <?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>
-                                                </a>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td><?php echo date('d/m/Y H:i', (int) $item['modifiedAt']); ?></td>
-                                        <td><?php echo $item['isDirectory'] ? 'Dossier de fichiers' : 'Fichier'; ?></td>
-                                        <td><?php echo $item['isDirectory'] ? '' : number_format((float) $item['size'] / 1024, 1, ',', ' ') . ' Ko'; ?></td>
-                                        <td class="text-nowrap" style="position: relative; z-index: 2;">
-                                            <div class="btn-group btn-group-xs" role="group" aria-label="Actions fichier">
-                                                <button type="button" draggable="false" class="btn btn-default rename-trigger" data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>" data-toggle="modal" data-target="#renameModal" title="Renommer">
-                                                    <span class="glyphicon glyphicon-pencil"></span>
-                                                </button>
-                                                <button type="button" draggable="false" class="btn btn-danger delete-trigger" data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>" data-toggle="modal" data-target="#deleteModal" title="Supprimer">
-                                                    <span class="glyphicon glyphicon-trash"></span>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                            </tbody>
+                                    </td>
+
+                                    <!-- DATE -->
+                                    <td><?php echo date('d/m/Y H:i', (int) $item['modifiedAt']); ?></td>
+
+                                    <!-- TYPE -->
+                                    <td><?php echo $item['isDirectory'] ? 'Dossier' : 'Fichier'; ?></td>
+
+                                    <!-- TAILLE -->
+                                    <td>
+                                        <?php echo $item['isDirectory'] ? '' : number_format((float)$item['size']/1024,1,',',' ') . ' Ko'; ?>
+                                    </td>
+
+                                    <!-- ACTIONS -->
+                                    <td class="actions-cell">
+                                        <div class="btn-group btn-group-xs" role="group" aria-label="Actions fichier">
+                                            <button
+                                                type="button"
+                                                class="btn btn-default rename-trigger"
+                                                data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>"
+                                                title="Renommer"
+                                            >
+                                                <i class="fa-solid fa-pen"></i>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                class="btn btn-danger delete-trigger"
+                                                data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>"
+                                                title="Supprimer"
+                                            >
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                            <?php endforeach; ?>
+                        </tbody>
                     </table>
+
                 </div>
             </div>
         </div>
@@ -538,13 +582,18 @@ entete('Documents', 'Documents', '5');
             <form method="post">
                 <input type="hidden" name="action" value="delete_item">
                 <input type="hidden" name="item_name" id="delete-item-name">
+
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                     <h4 class="modal-title" id="deleteModalLabel">Confirmer la suppression</h4>
                 </div>
+
                 <div class="modal-body">
                     <p>Voulez-vous vraiment supprimer <strong id="delete-item-label"></strong> ?</p>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
                     <button type="submit" class="btn btn-danger">Supprimer</button>
@@ -554,7 +603,7 @@ entete('Documents', 'Documents', '5');
     </div>
 </div>
 
-<form method="post" id="move-form" style="display: none;">
+<form method="post" id="move-form" style="display:none;">
     <input type="hidden" name="action" value="move_item">
     <input type="hidden" name="item_name" id="move-item-name">
     <input type="hidden" name="target_folder" id="move-target-folder">
@@ -566,16 +615,21 @@ entete('Documents', 'Documents', '5');
             <form method="post">
                 <input type="hidden" name="action" value="rename_item">
                 <input type="hidden" name="item_name" id="rename-item-name">
+
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                     <h4 class="modal-title" id="renameModalLabel">Renommer</h4>
                 </div>
+
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="rename-new-name">Nouveau nom</label>
                         <input type="text" class="form-control" id="rename-new-name" name="new_name" required>
                     </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
                     <button type="submit" class="btn btn-primary">Enregistrer</button>
@@ -586,120 +640,162 @@ entete('Documents', 'Documents', '5');
 </div>
 
 <script>
-    (function () {
-        const dropzone = document.getElementById('documents-dropzone');
-        const fileInput = document.getElementById('documents-input');
-        const uploadForm = document.getElementById('upload-form');
-        const renameButtons = document.querySelectorAll('.rename-trigger');
-        const deleteButtons = document.querySelectorAll('.delete-trigger');
-        const renameItemNameInput = document.getElementById('rename-item-name');
-        const renameNewNameInput = document.getElementById('rename-new-name');
-        const deleteItemNameInput = document.getElementById('delete-item-name');
-        const deleteItemLabel = document.getElementById('delete-item-label');
-        const moveForm = document.getElementById('move-form');
-        const moveItemInput = document.getElementById('move-item-name');
-        const moveTargetInput = document.getElementById('move-target-folder');
-        const draggableItems = document.querySelectorAll('a[draggable=\"true\"][data-item-name]');
-        const folderRows = document.querySelectorAll('tr[data-folder-target=\"1\"]');
+(function () {
+    const dropzone = document.getElementById('documents-dropzone');
+    const fileInput = document.getElementById('documents-input');
+    const uploadForm = document.getElementById('upload-form');
 
-        if (dropzone && fileInput && uploadForm) {
-            dropzone.addEventListener('click', function () {
-                fileInput.click();
-            });
+    const renameButtons = document.querySelectorAll('.rename-trigger');
+    const deleteButtons = document.querySelectorAll('.delete-trigger');
 
-            fileInput.addEventListener('change', function () {
-                if (fileInput.files.length > 0) {
-                    uploadForm.submit();
-                }
-            });
+    const renameItemNameInput = document.getElementById('rename-item-name');
+    const renameNewNameInput = document.getElementById('rename-new-name');
 
-            ['dragenter', 'dragover'].forEach(function (eventName) {
-                dropzone.addEventListener(eventName, function (event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    dropzone.classList.remove('panel-info');
-                    dropzone.classList.add('panel-primary');
-                });
-            });
+    const deleteItemNameInput = document.getElementById('delete-item-name');
+    const deleteItemLabel = document.getElementById('delete-item-label');
 
-            ['dragleave', 'drop'].forEach(function (eventName) {
-                dropzone.addEventListener(eventName, function (event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    dropzone.classList.remove('panel-primary');
-                    dropzone.classList.add('panel-info');
-                });
-            });
+    const moveForm = document.getElementById('move-form');
+    const moveItemInput = document.getElementById('move-item-name');
+    const moveTargetInput = document.getElementById('move-target-folder');
 
-            dropzone.addEventListener('drop', function (event) {
-                const files = event.dataTransfer.files;
-                if (!files || files.length === 0) {
-                    return;
-                }
+    const draggableItems = document.querySelectorAll('a[draggable="true"][data-item-name]');
+    const folderRows = document.querySelectorAll('tr[data-folder-target="1"]');
 
-                const dataTransfer = new DataTransfer();
-                Array.prototype.forEach.call(files, function (file) {
-                    dataTransfer.items.add(file);
-                });
-                fileInput.files = dataTransfer.files;
+    if (dropzone && fileInput && uploadForm) {
+        dropzone.addEventListener('click', function () {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function () {
+            if (fileInput.files.length > 0) {
                 uploadForm.submit();
-            });
-        }
-
-        Array.prototype.forEach.call(renameButtons, function (button) {
-            button.addEventListener('mousedown', function (event) {
-                event.stopPropagation();
-            });
-            button.addEventListener('click', function () {
-                const itemName = button.getAttribute('data-item-name') || '';
-                renameItemNameInput.value = itemName;
-                renameNewNameInput.value = itemName;
-            });
+            }
         });
 
-        Array.prototype.forEach.call(draggableItems, function (item) {
-            item.addEventListener('dragstart', function (event) {
-                event.dataTransfer.setData('text/plain', item.getAttribute('data-item-name') || '');
-            });
-        });
-
-        Array.prototype.forEach.call(folderRows, function (row) {
-            row.addEventListener('dragover', function (event) {
+        ['dragenter', 'dragover'].forEach(function (eventName) {
+            dropzone.addEventListener(eventName, function (event) {
                 event.preventDefault();
-                row.classList.add('active');
-            });
-
-            row.addEventListener('dragleave', function () {
-                row.classList.remove('active');
-            });
-
-            row.addEventListener('drop', function (event) {
-                event.preventDefault();
-                row.classList.remove('active');
-                const sourceItem = event.dataTransfer.getData('text/plain');
-                const targetFolder = row.getAttribute('data-folder-name') || '';
-
-                if (!sourceItem || !targetFolder || sourceItem === targetFolder) {
-                    return;
-                }
-
-                moveItemInput.value = sourceItem;
-                moveTargetInput.value = targetFolder;
-                moveForm.submit();
-            });
-        });
-
-        Array.prototype.forEach.call(deleteButtons, function (button) {
-            button.addEventListener('mousedown', function (event) {
                 event.stopPropagation();
-            });
-            button.addEventListener('click', function () {
-                const itemName = button.getAttribute('data-item-name') || '';
-                deleteItemNameInput.value = itemName;
-                deleteItemLabel.textContent = itemName;
+                dropzone.classList.remove('panel-info');
+                dropzone.classList.add('panel-primary');
             });
         });
-    })();
+
+        ['dragleave', 'drop'].forEach(function (eventName) {
+            dropzone.addEventListener(eventName, function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                dropzone.classList.remove('panel-primary');
+                dropzone.classList.add('panel-info');
+            });
+        });
+
+        dropzone.addEventListener('drop', function (event) {
+            const files = event.dataTransfer.files;
+            if (!files || files.length === 0) {
+                return;
+            }
+
+            const dataTransfer = new DataTransfer();
+            Array.prototype.forEach.call(files, function (file) {
+                dataTransfer.items.add(file);
+            });
+
+            fileInput.files = dataTransfer.files;
+            uploadForm.submit();
+        });
+    }
+
+    Array.prototype.forEach.call(renameButtons, function (button) {
+        button.setAttribute('draggable', 'false');
+
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (!renameItemNameInput || !renameNewNameInput) {
+                return;
+            }
+
+            const itemName = button.getAttribute('data-item-name') || '';
+            renameItemNameInput.value = itemName;
+            renameNewNameInput.value = itemName;
+
+            if (window.jQuery) {
+                window.jQuery('#renameModal').modal('show');
+            }
+        });
+    });
+
+    Array.prototype.forEach.call(deleteButtons, function (button) {
+        button.setAttribute('draggable', 'false');
+
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (!deleteItemNameInput || !deleteItemLabel) {
+                return;
+            }
+
+            const itemName = button.getAttribute('data-item-name') || '';
+            deleteItemNameInput.value = itemName;
+            deleteItemLabel.textContent = itemName;
+
+            if (window.jQuery) {
+                window.jQuery('#deleteModal').modal('show');
+            }
+        });
+    });
+
+    Array.prototype.forEach.call(draggableItems, function (item) {
+        item.addEventListener('dragstart', function (event) {
+            const itemName = item.getAttribute('data-item-name') || '';
+            event.dataTransfer.setData('text/plain', itemName);
+            event.dataTransfer.effectAllowed = 'move';
+        });
+    });
+
+    Array.prototype.forEach.call(folderRows, function (row) {
+        row.addEventListener('dragover', function (event) {
+            if (event.target.closest('.actions-cell')) {
+                return;
+            }
+
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+            row.classList.add('active');
+        });
+
+        row.addEventListener('dragleave', function () {
+            row.classList.remove('active');
+        });
+
+        row.addEventListener('drop', function (event) {
+            if (event.target.closest('.actions-cell')) {
+                return;
+            }
+
+            event.preventDefault();
+            row.classList.remove('active');
+
+            if (!moveForm || !moveItemInput || !moveTargetInput) {
+                return;
+            }
+
+            const sourceItem = event.dataTransfer.getData('text/plain');
+            const targetFolder = row.getAttribute('data-folder-name') || '';
+
+            if (!sourceItem || !targetFolder || sourceItem === targetFolder) {
+                return;
+            }
+
+            moveItemInput.value = sourceItem;
+            moveTargetInput.value = targetFolder;
+            moveForm.submit();
+        });
+    });
+})();
 </script>
 
 <?php require '../includes/footer.php'; ?>
