@@ -512,25 +512,12 @@ entete('Documents', 'Documents', '5');
                                         <td><?php echo $item['isDirectory'] ? 'Dossier de fichiers' : 'Fichier'; ?></td>
                                         <td><?php echo $item['isDirectory'] ? '' : number_format((float) $item['size'] / 1024, 1, ',', ' ') . ' Ko'; ?></td>
                                         <td>
-                                            <div class="dropdown">
-                                                <button class="btn btn-default btn-xs row-menu-toggle" type="button" aria-haspopup="true" aria-expanded="false">
-                                                    ...
-                                                    <span class="caret"></span>
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-right">
-                                                    <li>
-                                                        <a href="#" class="rename-trigger" data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>" data-toggle="modal" data-target="#renameModal">Renommer</a>
-                                                    </li>
-                                                    <li role="separator" class="divider"></li>
-                                                    <li>
-                                                        <form method="post" onsubmit="return confirm('Confirmer la suppression ?');" style="margin: 0;">
-                                                            <input type="hidden" name="action" value="delete_item">
-                                                            <input type="hidden" name="item_name" value="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>">
-                                                            <button type="submit" class="btn btn-link btn-block text-left">Supprimer</button>
-                                                        </form>
-                                                    </li>
-                                                </ul>
-                                            </div>
+                                            <button type="button" class="btn btn-link btn-xs rename-trigger" data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>" data-toggle="modal" data-target="#renameModal" title="Renommer">
+                                                <span class="glyphicon glyphicon-pencil"></span>
+                                            </button>
+                                            <button type="button" class="btn btn-link btn-xs delete-trigger text-danger" data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>" data-toggle="modal" data-target="#deleteModal" title="Supprimer">
+                                                <span class="glyphicon glyphicon-trash"></span>
+                                            </button>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -539,6 +526,28 @@ entete('Documents', 'Documents', '5');
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form method="post">
+                <input type="hidden" name="action" value="delete_item">
+                <input type="hidden" name="item_name" id="delete-item-name">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="deleteModalLabel">Confirmer la suppression</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Voulez-vous vraiment supprimer <strong id="delete-item-label"></strong> ?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -580,14 +589,16 @@ entete('Documents', 'Documents', '5');
         const fileInput = document.getElementById('documents-input');
         const uploadForm = document.getElementById('upload-form');
         const renameButtons = document.querySelectorAll('.rename-trigger');
+        const deleteButtons = document.querySelectorAll('.delete-trigger');
         const renameItemNameInput = document.getElementById('rename-item-name');
         const renameNewNameInput = document.getElementById('rename-new-name');
+        const deleteItemNameInput = document.getElementById('delete-item-name');
+        const deleteItemLabel = document.getElementById('delete-item-label');
         const moveForm = document.getElementById('move-form');
         const moveItemInput = document.getElementById('move-item-name');
         const moveTargetInput = document.getElementById('move-target-folder');
         const draggableItems = document.querySelectorAll('a[draggable=\"true\"][data-item-name]');
         const folderRows = document.querySelectorAll('tr[data-folder-target=\"1\"]');
-        const menuToggles = document.querySelectorAll('.row-menu-toggle');
 
         if (dropzone && fileInput && uploadForm) {
             dropzone.addEventListener('click', function () {
@@ -673,41 +684,11 @@ entete('Documents', 'Documents', '5');
             });
         });
 
-        Array.prototype.forEach.call(menuToggles, function (toggleButton) {
-            toggleButton.addEventListener('click', function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-
-                let parentDropdown = null;
-                if (typeof toggleButton.closest === 'function') {
-                    parentDropdown = toggleButton.closest('.dropdown');
-                } else {
-                    let currentNode = toggleButton.parentNode;
-                    while (currentNode) {
-                        if (currentNode.classList && currentNode.classList.contains('dropdown')) {
-                            parentDropdown = currentNode;
-                            break;
-                        }
-                        currentNode = currentNode.parentNode;
-                    }
-                }
-                if (!parentDropdown) {
-                    return;
-                }
-
-                Array.prototype.forEach.call(document.querySelectorAll('.dropdown.open'), function (openedDropdown) {
-                    if (openedDropdown !== parentDropdown) {
-                        openedDropdown.classList.remove('open');
-                    }
-                });
-
-                parentDropdown.classList.toggle('open');
-            });
-        });
-
-        document.addEventListener('click', function () {
-            Array.prototype.forEach.call(document.querySelectorAll('.dropdown.open'), function (openedDropdown) {
-                openedDropdown.classList.remove('open');
+        Array.prototype.forEach.call(deleteButtons, function (button) {
+            button.addEventListener('click', function () {
+                const itemName = button.getAttribute('data-item-name') || '';
+                deleteItemNameInput.value = itemName;
+                deleteItemLabel.textContent = itemName;
             });
         });
     })();
