@@ -589,51 +589,49 @@ entete('Documents', 'Documents', '5');
         const folderRows = document.querySelectorAll('tr[data-folder-target=\"1\"]');
         const menuToggles = document.querySelectorAll('.row-menu-toggle');
 
-        if (!dropzone || !fileInput || !uploadForm) {
-            return;
-        }
+        if (dropzone && fileInput && uploadForm) {
+            dropzone.addEventListener('click', function () {
+                fileInput.click();
+            });
 
-        dropzone.addEventListener('click', function () {
-            fileInput.click();
-        });
+            fileInput.addEventListener('change', function () {
+                if (fileInput.files.length > 0) {
+                    uploadForm.submit();
+                }
+            });
 
-        fileInput.addEventListener('change', function () {
-            if (fileInput.files.length > 0) {
+            ['dragenter', 'dragover'].forEach(function (eventName) {
+                dropzone.addEventListener(eventName, function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dropzone.classList.remove('panel-info');
+                    dropzone.classList.add('panel-primary');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(function (eventName) {
+                dropzone.addEventListener(eventName, function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dropzone.classList.remove('panel-primary');
+                    dropzone.classList.add('panel-info');
+                });
+            });
+
+            dropzone.addEventListener('drop', function (event) {
+                const files = event.dataTransfer.files;
+                if (!files || files.length === 0) {
+                    return;
+                }
+
+                const dataTransfer = new DataTransfer();
+                Array.prototype.forEach.call(files, function (file) {
+                    dataTransfer.items.add(file);
+                });
+                fileInput.files = dataTransfer.files;
                 uploadForm.submit();
-            }
-        });
-
-        ['dragenter', 'dragover'].forEach(function (eventName) {
-            dropzone.addEventListener(eventName, function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-                dropzone.classList.remove('panel-info');
-                dropzone.classList.add('panel-primary');
             });
-        });
-
-        ['dragleave', 'drop'].forEach(function (eventName) {
-            dropzone.addEventListener(eventName, function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-                dropzone.classList.remove('panel-primary');
-                dropzone.classList.add('panel-info');
-            });
-        });
-
-        dropzone.addEventListener('drop', function (event) {
-            const files = event.dataTransfer.files;
-            if (!files || files.length === 0) {
-                return;
-            }
-
-            const dataTransfer = new DataTransfer();
-            Array.prototype.forEach.call(files, function (file) {
-                dataTransfer.items.add(file);
-            });
-            fileInput.files = dataTransfer.files;
-            uploadForm.submit();
-        });
+        }
 
         Array.prototype.forEach.call(renameButtons, function (button) {
             button.addEventListener('click', function () {
@@ -680,7 +678,19 @@ entete('Documents', 'Documents', '5');
                 event.preventDefault();
                 event.stopPropagation();
 
-                const parentDropdown = toggleButton.closest('.dropdown');
+                let parentDropdown = null;
+                if (typeof toggleButton.closest === 'function') {
+                    parentDropdown = toggleButton.closest('.dropdown');
+                } else {
+                    let currentNode = toggleButton.parentNode;
+                    while (currentNode) {
+                        if (currentNode.classList && currentNode.classList.contains('dropdown')) {
+                            parentDropdown = currentNode;
+                            break;
+                        }
+                        currentNode = currentNode.parentNode;
+                    }
+                }
                 if (!parentDropdown) {
                     return;
                 }
