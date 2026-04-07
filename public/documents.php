@@ -197,20 +197,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'rename_item') {
         $itemName = $sanitizeExistingItemName($_POST['item_name'] ?? '');
         $requestedDisplayName = $normalizeDisplayName($_POST['new_name'] ?? '');
-        $newName = $normalizeName($requestedDisplayName);
 
-        if ($itemName === '' || $newName === '' || $requestedDisplayName === '') {
+        if ($itemName === '' || $requestedDisplayName === '') {
             $setFlashMessage('error', 'Renommage invalide.');
             $redirectToCurrentPath($relativePath);
         }
 
         $sourcePath = $currentDirectory . '/' . $itemName;
-        $destinationPath = $currentDirectory . '/' . $newName;
-
         if (!file_exists($sourcePath)) {
             $setFlashMessage('error', 'Élément introuvable.');
             $redirectToCurrentPath($relativePath);
         }
+
+        if (is_file($sourcePath)) {
+            $sourceExtension = (string) pathinfo($itemName, PATHINFO_EXTENSION);
+            $requestedExtension = (string) pathinfo($requestedDisplayName, PATHINFO_EXTENSION);
+            if ($sourceExtension !== '' && $requestedExtension === '') {
+                $requestedDisplayName .= '.' . $sourceExtension;
+            }
+        }
+
+        $newName = $normalizeName($requestedDisplayName);
+        if ($newName === '') {
+            $setFlashMessage('error', 'Renommage invalide.');
+            $redirectToCurrentPath($relativePath);
+        }
+
+        $destinationPath = $currentDirectory . '/' . $newName;
 
         if (file_exists($destinationPath)) {
             $setFlashMessage('error', 'Le nouveau nom existe déjà.');
