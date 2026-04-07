@@ -466,8 +466,7 @@ entete('Documents', 'Documents', '5');
                             Glissez-déposez vos fichiers ici.
                         </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-striped table-bordered table-hover">
+                    <table class="table table-striped table-bordered table-hover">
                             <thead>
                             <tr>
                                 <th>Nom</th>
@@ -514,7 +513,7 @@ entete('Documents', 'Documents', '5');
                                         <td><?php echo $item['isDirectory'] ? '' : number_format((float) $item['size'] / 1024, 1, ',', ' ') . ' Ko'; ?></td>
                                         <td>
                                             <div class="dropdown">
-                                                <button class="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <button class="btn btn-default btn-xs row-menu-toggle" type="button" aria-haspopup="true" aria-expanded="false">
                                                     ...
                                                     <span class="caret"></span>
                                                 </button>
@@ -537,8 +536,7 @@ entete('Documents', 'Documents', '5');
                                 <?php endforeach; ?>
                             <?php endif; ?>
                             </tbody>
-                        </table>
-                    </div>
+                    </table>
                 </div>
             </div>
         </div>
@@ -589,6 +587,7 @@ entete('Documents', 'Documents', '5');
         const moveTargetInput = document.getElementById('move-target-folder');
         const draggableItems = document.querySelectorAll('a[draggable=\"true\"][data-item-name]');
         const folderRows = document.querySelectorAll('tr[data-folder-target=\"1\"]');
+        const menuToggles = document.querySelectorAll('.row-menu-toggle');
 
         if (!dropzone || !fileInput || !uploadForm) {
             return;
@@ -673,6 +672,32 @@ entete('Documents', 'Documents', '5');
                 moveItemInput.value = sourceItem;
                 moveTargetInput.value = targetFolder;
                 moveForm.submit();
+            });
+        });
+
+        Array.prototype.forEach.call(menuToggles, function (toggleButton) {
+            toggleButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const parentDropdown = toggleButton.closest('.dropdown');
+                if (!parentDropdown) {
+                    return;
+                }
+
+                Array.prototype.forEach.call(document.querySelectorAll('.dropdown.open'), function (openedDropdown) {
+                    if (openedDropdown !== parentDropdown) {
+                        openedDropdown.classList.remove('open');
+                    }
+                });
+
+                parentDropdown.classList.toggle('open');
+            });
+        });
+
+        document.addEventListener('click', function () {
+            Array.prototype.forEach.call(document.querySelectorAll('.dropdown.open'), function (openedDropdown) {
+                openedDropdown.classList.remove('open');
             });
         });
     })();
