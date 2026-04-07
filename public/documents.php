@@ -490,7 +490,6 @@ entete('Documents', 'Documents', '5');
                                     $iconClass = $getIconClass($item);
                                     ?>
                                     <tr
-                                        draggable="true"
                                         data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>"
                                         <?php if ($item['isDirectory']): ?>
                                             data-folder-target="1"
@@ -499,12 +498,12 @@ entete('Documents', 'Documents', '5');
                                     >
                                         <td>
                                             <?php if ($item['isDirectory']): ?>
-                                                <a href="documents.php?path=<?php echo rawurlencode($itemRelativePath); ?>">
+                                                <a href="documents.php?path=<?php echo rawurlencode($itemRelativePath); ?>" draggable="true" data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>">
                                                     <span class="glyphicon <?php echo $iconClass; ?>" aria-hidden="true"></span>
                                                     <?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>
                                                 </a>
                                             <?php else: ?>
-                                                <a href="<?php echo $buildPublicFileLink($itemRelativePath); ?>" target="_blank">
+                                                <a href="<?php echo $buildPublicFileLink($itemRelativePath); ?>" target="_blank" draggable="true" data-item-name="<?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>">
                                                     <span class="glyphicon <?php echo $iconClass; ?>" aria-hidden="true"></span>
                                                     <?php echo htmlspecialchars($itemName, ENT_QUOTES, 'UTF-8'); ?>
                                                 </a>
@@ -588,7 +587,8 @@ entete('Documents', 'Documents', '5');
         const moveForm = document.getElementById('move-form');
         const moveItemInput = document.getElementById('move-item-name');
         const moveTargetInput = document.getElementById('move-target-folder');
-        const tableRows = document.querySelectorAll('tr[data-item-name]');
+        const draggableItems = document.querySelectorAll('a[draggable=\"true\"][data-item-name]');
+        const folderRows = document.querySelectorAll('tr[data-folder-target=\"1\"]');
 
         if (!dropzone || !fileInput || !uploadForm) {
             return;
@@ -644,36 +644,36 @@ entete('Documents', 'Documents', '5');
             });
         });
 
-        Array.prototype.forEach.call(tableRows, function (row) {
-            row.addEventListener('dragstart', function (event) {
-                event.dataTransfer.setData('text/plain', row.getAttribute('data-item-name') || '');
+        Array.prototype.forEach.call(draggableItems, function (item) {
+            item.addEventListener('dragstart', function (event) {
+                event.dataTransfer.setData('text/plain', item.getAttribute('data-item-name') || '');
+            });
+        });
+
+        Array.prototype.forEach.call(folderRows, function (row) {
+            row.addEventListener('dragover', function (event) {
+                event.preventDefault();
+                row.classList.add('active');
             });
 
-            if (row.getAttribute('data-folder-target') === '1') {
-                row.addEventListener('dragover', function (event) {
-                    event.preventDefault();
-                    row.classList.add('active');
-                });
+            row.addEventListener('dragleave', function () {
+                row.classList.remove('active');
+            });
 
-                row.addEventListener('dragleave', function () {
-                    row.classList.remove('active');
-                });
+            row.addEventListener('drop', function (event) {
+                event.preventDefault();
+                row.classList.remove('active');
+                const sourceItem = event.dataTransfer.getData('text/plain');
+                const targetFolder = row.getAttribute('data-folder-name') || '';
 
-                row.addEventListener('drop', function (event) {
-                    event.preventDefault();
-                    row.classList.remove('active');
-                    const sourceItem = event.dataTransfer.getData('text/plain');
-                    const targetFolder = row.getAttribute('data-folder-name') || '';
+                if (!sourceItem || !targetFolder || sourceItem === targetFolder) {
+                    return;
+                }
 
-                    if (!sourceItem || !targetFolder || sourceItem === targetFolder) {
-                        return;
-                    }
-
-                    moveItemInput.value = sourceItem;
-                    moveTargetInput.value = targetFolder;
-                    moveForm.submit();
-                });
-            }
+                moveItemInput.value = sourceItem;
+                moveTargetInput.value = targetFolder;
+                moveForm.submit();
+            });
         });
     })();
 </script>
