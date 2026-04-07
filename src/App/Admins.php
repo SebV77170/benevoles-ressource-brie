@@ -44,4 +44,29 @@ class Admins extends Users {
         $sth = $this->pdo->prepare($sql);
         $sth->execute([':admin' => $habilitation, ':uuid' => $uuid]);
     }
+
+    public function deleteUser(string $uuid): void {
+        $this->pdo->beginTransaction();
+
+        try {
+            $deleteConges = $this->pdo->prepare('DELETE FROM conges WHERE uuid_user = :uuid');
+            $deleteConges->execute([':uuid' => $uuid]);
+
+            $deleteDateUser = $this->pdo->prepare('DELETE FROM date_users WHERE id_user = :uuid');
+            $deleteDateUser->execute([':uuid' => $uuid]);
+
+            $deleteInscriptions = $this->pdo->prepare('DELETE FROM inscription_creneau WHERE id_user = :uuid');
+            $deleteInscriptions->execute([':uuid' => $uuid]);
+
+            $deleteUser = $this->pdo->prepare('DELETE FROM users WHERE uuid_user = :uuid');
+            $deleteUser->execute([':uuid' => $uuid]);
+
+            $this->pdo->commit();
+        } catch (\Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
 }
