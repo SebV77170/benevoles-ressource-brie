@@ -33,6 +33,18 @@ $normalizeName = static function (string $name): string {
     return trim((string) $name);
 };
 
+$sanitizeExistingItemName = static function (?string $name): string {
+    $name = trim((string) $name);
+    if ($name === '' || $name === '.' || $name === '..') {
+        return '';
+    }
+    if (strpos($name, '/') !== false || strpos($name, '\\') !== false || strpos($name, "\0") !== false) {
+        return '';
+    }
+
+    return $name;
+};
+
 $normalizeRelativePath = static function (?string $path) use ($normalizeName): string {
     if ($path === null || $path === '') {
         return '';
@@ -108,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'rename_item') {
-        $itemName = $normalizeName($_POST['item_name'] ?? '');
+        $itemName = $sanitizeExistingItemName($_POST['item_name'] ?? '');
         $newName = $normalizeName($_POST['new_name'] ?? '');
 
         if ($itemName === '' || $newName === '') {
@@ -139,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'delete_item') {
-        $itemName = $normalizeName($_POST['item_name'] ?? '');
+        $itemName = $sanitizeExistingItemName($_POST['item_name'] ?? '');
         if ($itemName === '') {
             $setFlashMessage('error', 'Suppression invalide.');
             $redirectToCurrentPath($relativePath);
@@ -172,8 +184,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'move_item') {
-        $itemName = $normalizeName($_POST['item_name'] ?? '');
-        $targetFolder = $normalizeName($_POST['target_folder'] ?? '');
+        $itemName = $sanitizeExistingItemName($_POST['item_name'] ?? '');
+        $targetFolder = $sanitizeExistingItemName($_POST['target_folder'] ?? '');
 
         if ($itemName === '' || $targetFolder === '') {
             $setFlashMessage('error', 'Déplacement invalide.');
