@@ -61,7 +61,8 @@ require('../actions/db.php');
                     
                     //Rediriger l'utilisateur vers la page d'accueil du forum
                     
-                    header('location: ../public/index.php');
+                    header('Location: /public/index.php');
+                    exit;
                     
                 }else{
                     $errorMsg = "Votre mot de passe est incorrect...";
