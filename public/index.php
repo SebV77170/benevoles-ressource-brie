@@ -3,7 +3,6 @@ session_start();
 require '../actions/users/securityAction.php';
 require '../src/bootstrap.php';
 require '../actions/users/userdefinition.php';
-echo 'alwaysdata';
 
 entete('Planning bénévoles','PGB (Programme Gestion Bénévoles) v1.0','');
 
