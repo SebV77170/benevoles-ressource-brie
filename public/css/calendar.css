@@ -1,18 +1,25 @@
 .calendar {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 96px);
+  min-height: 0;
 }
 
 .calendar__table {
   width: 100%;
-  height: calc(100vh - 128px);
+  height: 100%;
+  table-layout: fixed;
+  font-size: clamp(0.72rem, 0.9vw, 0.95rem);
 }
 
 .calendar__table td {
-  padding: 10px;
+  padding: clamp(4px, 0.7vw, 10px);
   border: 1px solid #CCC;
   vertical-align: top;
   width: 14.29%;
   height: 20%;
+  overflow: hidden;
 }
 
 .calendar__table td.is-today {
@@ -26,11 +33,11 @@
 .calendar__weekday {
   font-weight: bold;
   color: #000;
-  font-size: 1.2em;
+  font-size: clamp(0.75rem, 1vw, 1.1rem);
 }
 
 .calendar__day {
-  font-size: 1.3em;
+  font-size: clamp(0.8rem, 1.1vw, 1.15rem);
 }
 
 .calendar__othermonth .calendar__day {
@@ -83,4 +90,36 @@
   text-decoration: none;
   color: #FFF;
   transform: scale(1.2);
+}
+
+.calendar__event {
+  font-size: clamp(0.65rem, 0.8vw, 0.85rem);
+  line-height: 1.2;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 992px) {
+  .calendar {
+    height: calc(100vh - 84px);
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar {
+    height: calc(100vh - 72px);
+  }
+
+  .calendar__table td {
+    padding: 4px;
+  }
+
+  .calendar__light {
+    width: 11px;
+    height: 11px;
+    line-height: 11px;
+    font-size: 0;
+  }
 }
