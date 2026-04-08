@@ -74,9 +74,9 @@ if(isset($_REQUEST['pwdrst']))
 
   if ($Pseudoinfo > 0) {
     if ($_SERVER["HTTP_HOST"] == 'localhost:8888') {
-        $url = 'http://localhost:8888/benevoles-ressource-brie/public/reset-password.php?secret=' . urlencode(base64_encode($pseudo));
+        $url = 'http://localhost:8888/benevoles-ressource-brie/reset-password.php?secret=' . urlencode(base64_encode($pseudo));
     } else {
-        $url = 'https://benevoles.ressourcebrie.fr/public/reset-password.php?secret=' . urlencode(base64_encode($pseudo));
+        $url = 'https://benevoles.ressourcebrie.fr/reset-password.php?secret=' . urlencode(base64_encode($pseudo));
     }
 
     $message = '

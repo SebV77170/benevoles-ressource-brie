@@ -61,7 +61,7 @@ require('../actions/db.php');
                     
                     //Rediriger l'utilisateur vers la page d'accueil du forum
                     
-                    header('Location: /public/index.php');
+                    header('Location: /index.php');
                     exit;
                     
                 }else{
