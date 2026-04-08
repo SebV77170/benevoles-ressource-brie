@@ -9,6 +9,6 @@
                 <?php  if(isset($admin)){?>
                 <li <?php if($page == 4){echo 'class="puce vert"';}else{echo 'class="puce bleu"';} ?>><a class="lienpuce" href="accueil_admin.php">Administration</a></li>
                 <?php } ?>
-                <li class="puce bleu"><a class="lienpuce" href="../actions/users/logoutAction.php">Logout</a></li>     
+                <li class="puce bleu"><a class="lienpuce" href="logout.php">Logout</a></li>     
         </ul>
 </nav>
