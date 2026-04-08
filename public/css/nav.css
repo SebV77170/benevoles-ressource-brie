@@ -173,14 +173,14 @@
     }
 
     .navforum > .liste{
-        display: none;
+        display: none !important;
         flex-direction: column;
         align-items: stretch;
         margin: 0 10px;
     }
 
-    .navforum--open > .liste{
-        display: flex;
+    .navforum.navforum--open > .liste{
+        display: flex !important;
     }
 
     .navforum > .liste > .puce{

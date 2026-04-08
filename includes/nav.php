@@ -31,5 +31,12 @@
                         var isOpen = nav.classList.toggle('navforum--open');
                         button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                 });
+
+                window.addEventListener('resize', function () {
+                        if (window.innerWidth > 900) {
+                                nav.classList.remove('navforum--open');
+                                button.setAttribute('aria-expanded', 'false');
+                        }
+                });
         })();
 </script>
