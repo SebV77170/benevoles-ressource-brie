@@ -1,1 +1,5 @@
-/laravel-app
+
+.env
+/vendor
+/vendor/*
+/node_modules
