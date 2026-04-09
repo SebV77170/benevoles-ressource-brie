@@ -9,11 +9,14 @@ require '../actions/users/security1.php';
 
 $isAdmin = (int) $users->getAdmin() === 2;
 
-$baseDirectoryPath = dirname(__DIR__) . '/fichiers';
+$baseDirectoryPath = __DIR__ . '/fichiers';
+
 if (!is_dir($baseDirectoryPath)) {
     mkdir($baseDirectoryPath, 0775, true);
 }
+
 $baseDirectoryRealPath = realpath($baseDirectoryPath);
+
 if ($baseDirectoryRealPath === false) {
     throw new RuntimeException('Le dossier fichiers est inaccessible.');
 }
