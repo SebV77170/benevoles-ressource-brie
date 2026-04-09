@@ -5,7 +5,7 @@
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="collapse navbar-collapse justify-content-center show" id="menuForum">
+        <div class="collapse navbar-collapse justify-content-center" id="menuForum">
             <ul class="navbar-nav gap-2 text-center">
 
                 <li class="nav-item">

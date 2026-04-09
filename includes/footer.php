@@ -4,6 +4,56 @@
     <script>
         $('#myModal').modal('show');
     </script>
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const menuElement = document.getElementById('menuForum');
+    const toggler = document.querySelector('.custom-toggler');
+
+    if (!menuElement || !toggler) return;
+
+    const bsCollapse = new bootstrap.Collapse(menuElement, {
+        toggle: false
+    });
+
+    let inactivityTimer = null;
+    const delay = 5000; // 5 secondes
+
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimer);
+
+        if (menuElement.classList.contains('show')) {
+            inactivityTimer = setTimeout(() => {
+                bsCollapse.hide();
+            }, delay);
+        }
+    }
+
+    function clearInactivityTimer() {
+        clearTimeout(inactivityTimer);
+    }
+
+    menuElement.addEventListener('shown.bs.collapse', function () {
+        resetInactivityTimer();
+    });
+
+    menuElement.addEventListener('hidden.bs.collapse', function () {
+        clearInactivityTimer();
+    });
+
+    menuElement.addEventListener('mousemove', resetInactivityTimer);
+    menuElement.addEventListener('click', resetInactivityTimer);
+    menuElement.addEventListener('touchstart', resetInactivityTimer);
+    menuElement.addEventListener('scroll', resetInactivityTimer);
+
+    const menuLinks = menuElement.querySelectorAll('a');
+    menuLinks.forEach(link => {
+        link.addEventListener('click', function () {
+            clearInactivityTimer();
+            bsCollapse.hide();
+        });
+    });
+});
+</script>
     </body>
 </html>
 <footer class="footer">
