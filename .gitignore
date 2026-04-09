@@ -3,4 +3,4 @@
 /vendor
 /vendor/*
 /node_modules
-/fichiers
+public/fichiers
