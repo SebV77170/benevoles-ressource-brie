@@ -80,7 +80,17 @@ h1{
 }
 
 
+.vert{
+    background-color: #26A648
+}
 
+.jaune{
+    background-color: yellow;
+}
+
+.rouge{
+    background-color: red;
+}
 
 /*FIN Bouton pour Retour, valider ou Annuler*/
 
