@@ -1,0 +1,105 @@
+/* NAV PRINCIPALE */
+.navforum {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    width: 100%;
+    background-color: #FBF3E4;
+    padding: 10px 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* BOUTONS MENU */
+.menu-btn {
+    min-width: 160px;
+    padding: 10px 16px !important;
+    border-radius: 8px;
+    font-weight: bold;
+    text-align: center;
+    color: white !important;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+}
+
+/* PAR DÉFAUT (bleu) */
+.inactive-link {
+    background-color: #23A3D9;
+}
+
+/* ACTIF (vert) */
+.active-link {
+    background-color: #26A648;
+}
+
+/* HOVER */
+.inactive-link:hover {
+    background-color: #26A648;
+}
+
+.active-link:hover {
+    background-color: #23A3D9;
+}
+
+/* HAMBURGER */
+.custom-toggler {
+    border: 1px solid #23A3D9;
+    background: white;
+}
+
+/* Icône hamburger custom */
+.custom-toggler .navbar-toggler-icon {
+    background-image: none;
+    position: relative;
+    width: 24px;
+    height: 2px;
+    background-color: #23A3D9;
+    display: inline-block;
+}
+
+.custom-toggler .navbar-toggler-icon::before,
+.custom-toggler .navbar-toggler-icon::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 24px;
+    height: 2px;
+    background-color: #23A3D9;
+}
+
+.custom-toggler .navbar-toggler-icon::before {
+    top: -7px;
+}
+
+.custom-toggler .navbar-toggler-icon::after {
+    top: 7px;
+}
+
+/* NAV SECONDAIRE (optionnelle) */
+.navvente {
+    position: sticky;
+    top: 80px; /* dépend de la hauteur réelle */
+    z-index: 1020;
+    width: 100%;
+    background-color: #FBF3E4;
+    padding: 5px 0;
+}
+
+/* RESPONSIVE */
+@media (max-width: 991.98px) {
+
+    .menu-btn {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .navbar-nav {
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    /* IMPORTANT : éviter bug sticky empilé */
+    .navvente {
+        position: static;
+        top: auto;
+    }
+}
