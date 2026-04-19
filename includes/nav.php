@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navforum px-2">
+<nav class="navbar navbar-expand-lg navforum px-2 mb-3">
     <div class="container-fluid">
 
         <button class="navbar-toggler custom-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuForum" aria-controls="menuForum" aria-expanded="false" aria-label="Ouvrir le menu">
