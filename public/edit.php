@@ -216,5 +216,6 @@ entete($data['date'],'Consulter et s\'inscrire','1');
     </table>
     
 </div>
-
-<?php render('footer'); ?>
+<?php
+include('includes/footer.php');
+?>
