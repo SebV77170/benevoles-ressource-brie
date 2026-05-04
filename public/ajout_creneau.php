@@ -218,9 +218,12 @@ if($_SESSION['admin'] >= 0){
               </div>
               <div class="col-4">
               <h2>Nom du créneau</h2>
-                <div class="form-input">
-                  <input class="form-input" type="text" name="nom" id="nom" value="Ouverture Standard">
-                </div>
+                <input type="hidden" name="nom" id="nom" value="Ouverture Standard">
+                <select class="form-select" id="nomSelectSerie" aria-label="Nom du créneau (série)">
+                  <option value="vente" selected>vente</option>
+                  <option value="vente+dépôt">vente+dépôt</option>
+                  <option value="autre">autre</option>
+                </select>
               </div>
             </div>
             <div class="row">
@@ -318,9 +321,12 @@ if($_SESSION['admin'] >= 0){
                 </div>
                 <div class="col-4">
                   <h2>Nom du créneau</h2>
-                  <div class="form-input">
-                    <input class="form-input" type="text" name="nom" id="nom">
-                  </div>
+                  <input type="hidden" name="nom" id="nomSolitaire" value="vente">
+                  <select class="form-select" id="nomSelectSolitaire" aria-label="Nom du créneau (solitaire)">
+                    <option value="vente" selected>vente</option>
+                    <option value="vente+dépôt">vente+dépôt</option>
+                    <option value="autre">autre</option>
+                  </select>
                 </div>
               </div>
               <div class="row">
@@ -335,6 +341,25 @@ if($_SESSION['admin'] >= 0){
             </div>
           </form>      
         </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="customNomModal" tabindex="-1" aria-labelledby="customNomModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="customNomModalLabel">Nom personnalisé du créneau</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <label for="customNomInput" class="form-label">Saisissez le nom du créneau</label>
+        <input type="text" class="form-control" id="customNomInput" placeholder="Ex: inventaire">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-primary" id="saveCustomNom">Enregistrer</button>
+      </div>
     </div>
   </div>
 </div>
@@ -468,4 +493,72 @@ endif;
     include('../includes/footer.php');
     ?>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const hiddenSerie = document.getElementById('nom');
+  const hiddenSolitaire = document.getElementById('nomSolitaire');
+  const selectSerie = document.getElementById('nomSelectSerie');
+  const selectSolitaire = document.getElementById('nomSelectSolitaire');
+  const modalElement = document.getElementById('customNomModal');
+  const customInput = document.getElementById('customNomInput');
+  const saveCustomNom = document.getElementById('saveCustomNom');
+  const customNomModal = new bootstrap.Modal(modalElement);
+  let activeTarget = null;
+  let previousValue = null;
+
+  function applyPreset(targetHidden, value) {
+    if (targetHidden && value !== 'autre') {
+      targetHidden.value = value;
+    }
+  }
+
+  function openCustomModal(selectElement, targetHidden) {
+    activeTarget = targetHidden;
+    previousValue = selectElement.value;
+    customInput.value = targetHidden.value && targetHidden.value !== 'vente' && targetHidden.value !== 'vente+dépôt'
+      ? targetHidden.value
+      : '';
+    customNomModal.show();
+  }
+
+  selectSerie.addEventListener('change', function () {
+    if (this.value === 'autre') {
+      openCustomModal(this, hiddenSerie);
+      return;
+    }
+    applyPreset(hiddenSerie, this.value);
+  });
+
+  selectSolitaire.addEventListener('change', function () {
+    if (this.value === 'autre') {
+      openCustomModal(this, hiddenSolitaire);
+      return;
+    }
+    applyPreset(hiddenSolitaire, this.value);
+  });
+
+  saveCustomNom.addEventListener('click', function () {
+    const value = customInput.value.trim();
+    if (!value || !activeTarget) {
+      return;
+    }
+    activeTarget.value = value;
+    customNomModal.hide();
+  });
+
+  modalElement.addEventListener('hidden.bs.modal', function () {
+    if (activeTarget && !activeTarget.value) {
+      activeTarget.value = previousValue === 'autre' ? 'vente' : previousValue;
+    }
+    if (selectSerie.value === 'autre' && hiddenSerie.value !== customInput.value.trim()) {
+      selectSerie.value = hiddenSerie.value === 'vente+dépôt' ? 'vente+dépôt' : 'vente';
+    }
+    if (selectSolitaire.value === 'autre' && hiddenSolitaire.value !== customInput.value.trim()) {
+      selectSolitaire.value = hiddenSolitaire.value === 'vente+dépôt' ? 'vente+dépôt' : 'vente';
+    }
+    activeTarget = null;
+    previousValue = null;
+  });
+});
+</script>
 
