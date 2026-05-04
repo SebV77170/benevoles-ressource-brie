@@ -79,7 +79,7 @@ if (isset($_POST['modify'])):
     if (empty($errors)):
         $events->hydrate($event, $data);
         $events->update($event);
-        header('Location: index.php?success=1');
+        header('Location: calendrier.php?success=1');
         exit();
     else:
         $data['date'] = formatDateForDisplay($_POST['date'] ?? '');
