@@ -45,7 +45,8 @@ class Validator {
         foreach ($formats as $format) {
             $date = \DateTime::createFromFormat($format, $value);
             $errors = \DateTime::getLastErrors();
-            if ($date !== false && $errors['warning_count'] === 0 && $errors['error_count'] === 0) {
+            $hasDateErrors = is_array($errors) && ($errors['warning_count'] > 0 || $errors['error_count'] > 0);
+            if ($date !== false && !$hasDateErrors) {
                 return true;
             }
         }

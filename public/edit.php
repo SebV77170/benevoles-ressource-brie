@@ -20,7 +20,8 @@ function normalizeDateToSqlFormat(?string $date): ?string
     foreach ($formats as $format) {
         $parsedDate = \DateTime::createFromFormat($format, $date);
         $errors = \DateTime::getLastErrors();
-        if ($parsedDate !== false && $errors['warning_count'] === 0 && $errors['error_count'] === 0) {
+        $hasDateErrors = is_array($errors) && ($errors['warning_count'] > 0 || $errors['error_count'] > 0);
+        if ($parsedDate !== false && !$hasDateErrors) {
             return $parsedDate->format('Y-m-d');
         }
     }
