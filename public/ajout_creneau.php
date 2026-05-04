@@ -504,7 +504,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const saveCustomNom = document.getElementById('saveCustomNom');
   const customNomModal = new bootstrap.Modal(modalElement);
   let activeTarget = null;
-  let previousValue = null;
+  let activeSelect = null;
 
   function applyPreset(targetHidden, value) {
     if (targetHidden && value !== 'autre') {
@@ -512,9 +512,25 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  function setCustomOption(selectElement, customValue) {
+    const existingCustom = selectElement.querySelector('option[data-custom="true"]');
+    if (existingCustom) {
+      existingCustom.remove();
+    }
+
+    const customOption = document.createElement('option');
+    customOption.value = customValue;
+    customOption.textContent = customValue;
+    customOption.dataset.custom = 'true';
+
+    const autreOption = selectElement.querySelector('option[value="autre"]');
+    selectElement.insertBefore(customOption, autreOption);
+    selectElement.value = customValue;
+  }
+
   function openCustomModal(selectElement, targetHidden) {
     activeTarget = targetHidden;
-    previousValue = selectElement.value;
+    activeSelect = selectElement;
     customInput.value = targetHidden.value && targetHidden.value !== 'vente' && targetHidden.value !== 'vente+dépôt'
       ? targetHidden.value
       : '';
@@ -539,26 +555,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
   saveCustomNom.addEventListener('click', function () {
     const value = customInput.value.trim();
-    if (!value || !activeTarget) {
+    if (!value || !activeTarget || !activeSelect) {
       return;
     }
     activeTarget.value = value;
+    setCustomOption(activeSelect, value);
     customNomModal.hide();
   });
 
   modalElement.addEventListener('hidden.bs.modal', function () {
-    if (activeTarget && !activeTarget.value) {
-      activeTarget.value = previousValue === 'autre' ? 'vente' : previousValue;
-    }
-    if (selectSerie.value === 'autre' && hiddenSerie.value !== customInput.value.trim()) {
-      selectSerie.value = hiddenSerie.value === 'vente+dépôt' ? 'vente+dépôt' : 'vente';
-    }
-    if (selectSolitaire.value === 'autre' && hiddenSolitaire.value !== customInput.value.trim()) {
-      selectSolitaire.value = hiddenSolitaire.value === 'vente+dépôt' ? 'vente+dépôt' : 'vente';
+    if (activeSelect && activeSelect.value === 'autre') {
+      activeSelect.value = activeTarget && activeTarget.value ? activeTarget.value : 'vente';
     }
     activeTarget = null;
-    previousValue = null;
+    activeSelect = null;
   });
 });
 </script>
-
