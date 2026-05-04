@@ -11,7 +11,7 @@
     <div class="col-sm-6">
         <div class="form-group">
             <label for="date">Date</label>
-            <input id="date" type="date" placeholder="dd-mm-YYYY" required class="form-control" name="date" value="<?= isset($data['date']) ? h($data['date']) : ''; ?>">
+            <input id="date" type="text" placeholder="dd-mm-YYYY" pattern="\d{2}-\d{2}-\d{4}|\d{4}-\d{2}-\d{2}" required class="form-control" name="date" value="<?= isset($data['date']) ? h($data['date']) : ''; ?>">
             <?php if (isset($errors['date'])): ?>
                 <small class="form-text text-muted"><?= $errors['date']; ?></small>
             <?php endif; ?>

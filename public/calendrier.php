@@ -68,7 +68,7 @@ entete('Calendrier','Calendrier des créneaux','1');
                     
                     ?>
                     <div class="calendar__event">
-                        <?= (new DateTime($event['start']))->format('H:i') ?> - <?= (new DateTime($event['end']))->format('H:i') ?> <a href="edit.php?id=<?= $event['id']; ?>"><?= h($event['name']); ?></a>
+                        <?= (new DateTime($event['start']))->format('H:i') ?> - <?= (new DateTime($event['end']))->format('H:i') ?> <a href="edit.php?id=<?= $event['id']; ?>&date=<?= $date->format('Y-m-d'); ?>"><?= h($event['name']); ?></a>
                         
                     </div>
 

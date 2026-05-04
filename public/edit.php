@@ -7,6 +7,36 @@ require '../actions/users/userdefinition.php';
 
 $events = new Calendar\Events($pdo);
 $errors = [];
+
+function normalizeDateToSqlFormat(?string $date): ?string
+{
+    if ($date === null || trim($date) === '') {
+        return null;
+    }
+
+    $date = trim($date);
+    $formats = ['d-m-Y', 'Y-m-d'];
+
+    foreach ($formats as $format) {
+        $parsedDate = \DateTime::createFromFormat($format, $date);
+        $errors = \DateTime::getLastErrors();
+        if ($parsedDate !== false && $errors['warning_count'] === 0 && $errors['error_count'] === 0) {
+            return $parsedDate->format('Y-m-d');
+        }
+    }
+
+    return null;
+}
+
+function formatDateForDisplay(string $date): string
+{
+    $sqlDate = normalizeDateToSqlFormat($date);
+    if ($sqlDate === null) {
+        return $date;
+    }
+
+    return (new \DateTime($sqlDate))->format('d-m-Y');
+}
 try {
     $event = $events->find($_GET['id'] ?? null);
 } catch (\Exception $e) {
@@ -27,13 +57,22 @@ $data = [
 
 $Creneau = new Calendar\Creneaux($pdo,$timezone);
 
+if (isset($_GET['date'])) {
+    $prefilledDate = formatDateForDisplay($_GET['date']);
+    if (normalizeDateToSqlFormat($prefilledDate) !== null) {
+        $data['date'] = $prefilledDate;
+    }
+}
+
 if (isset($_POST['modify'])):
   
-    // Format fr => format us
-    $format_fr = $_POST['date'];
-    $format_us = implode('-',array_reverse  (explode('-',$format_fr)));
-    $_POST['date']=$format_us;
     $data = $_POST;
+    $normalizedDate = normalizeDateToSqlFormat($data['date'] ?? null);
+
+    if ($normalizedDate !== null) {
+        $data['date'] = $normalizedDate;
+    }
+
     $validator = new Calendar\EventValidator();
     $errors = $validator->validates($data);
     if (empty($errors)):
@@ -41,6 +80,8 @@ if (isset($_POST['modify'])):
         $events->update($event);
         header('Location: index.php?success=1');
         exit();
+    else:
+        $data['date'] = formatDateForDisplay($_POST['date'] ?? '');
     endif;
 endif;
 
@@ -53,7 +94,8 @@ if (isset($_POST['insert'])):
     endif;   
 endif;
 
-$creneauOnDay = $Creneau->getEventsBetween(new \DateTime(''.$data['date'].''), new \DateTime(''.$data['date'].''), 1);
+$sqlDate = normalizeDateToSqlFormat($data['date']) ?? (new \DateTime())->format('Y-m-d');
+$creneauOnDay = $Creneau->getEventsBetween(new \DateTime($sqlDate), new \DateTime($sqlDate), 1);
 $usersByCreneau = $users->getAllUsersByCreneau($creneauOnDay);
 
 

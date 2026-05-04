@@ -39,11 +39,19 @@ class Validator {
     }
 
     public function date (string $field): bool {
-        if (\DateTime::createFromFormat('Y-m-d', $this->data[$field]) === false) {
-            $this->errors[$field] = "La date ne semble pas valide";
-            return false;
+        $value = trim((string) $this->data[$field]);
+        $formats = ['Y-m-d', 'd-m-Y'];
+
+        foreach ($formats as $format) {
+            $date = \DateTime::createFromFormat($format, $value);
+            $errors = \DateTime::getLastErrors();
+            if ($date !== false && $errors['warning_count'] === 0 && $errors['error_count'] === 0) {
+                return true;
+            }
         }
-        return true;
+
+        $this->errors[$field] = "La date ne semble pas valide";
+        return false;
     }
 
     public function time (string $field): bool {
