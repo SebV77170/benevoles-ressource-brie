@@ -220,8 +220,8 @@ if($_SESSION['admin'] >= 0){
               <h2>Nom du créneau</h2>
                 <input type="hidden" name="nom" id="nom" value="Ouverture Standard">
                 <select class="form-select" id="nomSelectSerie" aria-label="Nom du créneau (série)">
-                  <option value="vente" selected>vente</option>
-                  <option value="vente+dépôt">vente+dépôt</option>
+                  <option value="Vente" selected>Vente</option>
+                  <option value="Vente+Dépôt">Vente+Dépôt</option>
                   <option value="autre">autre</option>
                 </select>
               </div>
