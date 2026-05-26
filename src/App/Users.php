@@ -119,7 +119,7 @@ class Users {
     }
 
     public function getAllUsersByCreneau2(array $data): array{
-        $sql = 'SELECT events.start, events.end, events.id,
+        $sql = 'SELECT events.start, events.end, events.id, events.id_in_day,
                        inscription_creneau.id_user, inscription_creneau.id_event, inscription_creneau.fonction
                 FROM events
                 LEFT OUTER JOIN inscription_creneau ON events.id = inscription_creneau.id_event
@@ -134,10 +134,14 @@ class Users {
         return $collect;
     }
 
-    public function countAllUsersByCreneau(array $data): array{
+    public function countAllUsersByCreneau(array $data, ?int $idInDay = null): array{
         $collect=[];
         foreach($data as $k=>$v){
             foreach($v as $n){
+                if ($idInDay !== null && (int) $n['id_in_day'] !== $idInDay) {
+                    continue;
+                }
+
                 $debut = new \DateTime($n['start']);
                 $fin   = new \DateTime($n['end']);
                 $date  = $debut->format('G:i').' '.$fin->format('G:i');
