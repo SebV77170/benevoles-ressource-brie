@@ -241,5 +241,5 @@ entete($data['date'],'Consulter et s\'inscrire','1');
     
 </div>
 <?php
-include('includes/footer.php');
+include('../includes/footer.php');
 ?>
