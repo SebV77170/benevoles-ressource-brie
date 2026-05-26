@@ -92,6 +92,18 @@ $allCreneauxOnDay = $Creneau->getEventsBetween(new \DateTime($sqlDate), new \Dat
 $creneauOnDay = array_values(array_filter($allCreneauxOnDay, function (array $creneau) use ($eventIdInDay): bool {
     return $eventIdInDay !== null && (int) $creneau['id_in_day'] === $eventIdInDay;
 }));
+
+if (empty($creneauOnDay)) {
+    $eventStart = $event->getStart();
+    $eventEnd = $event->getEnd();
+    $creneauOnDay = array_values(array_filter($allCreneauxOnDay, function (array $creneau) use ($eventStart, $eventEnd): bool {
+        $creneauStart = new \DateTime($creneau['start']);
+        $creneauEnd = new \DateTime($creneau['end']);
+
+        return $creneauStart >= $eventStart && $creneauEnd <= $eventEnd;
+    }));
+}
+
 $useGlobalCreneau = empty($creneauOnDay);
 
 if ($useGlobalCreneau) {
