@@ -17,7 +17,7 @@ $creneau = new Calendar\Creneaux($pdo, $timezone);
 
 
 if(isset($_POST['validate'])){
-    $insertion = $users->insertCreneauUser($_POST['id_event']);
+    $insertion = $users->insertCreneauUser($_POST['id_event'] ?? []);
     if($insertion == 0){
         $message1 = 'Veuillez insérer au moins un créneau svp.';
     }else{
@@ -26,7 +26,7 @@ if(isset($_POST['validate'])){
 }
 
 if(isset($_POST['suprr'])){
-    $insertion = $users->deleteCreneauUser($_POST['id']);
+    $insertion = $users->deleteCreneauUser($_POST['id'] ?? []);
     if($insertion == 0){
         $message3 = 'Veuillez sélectionner au moins un créneau svp.';
     }else{

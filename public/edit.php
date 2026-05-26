@@ -87,7 +87,7 @@ if (isset($_POST['modify'])):
 endif;
 
 if (isset($_POST['insert'])):
-      $insertion = $users->insertCreneauUser($_POST['id_event']);
+      $insertion = $users->insertCreneauUser($_POST['id_event'] ?? []);
     if($insertion == 0):
         $message1 = 'Veuillez insérer au moins un créneau svp.';
     else:
@@ -105,6 +105,14 @@ entete($data['date'],'Consulter et s\'inscrire','1');
 ?>
 
 <div class="container">
+
+  <?php if(isset($message1)): ?>
+    <div class="alert alert-danger text-center" role="alert"><?= $message1 ?></div>
+  <?php endif; ?>
+
+  <?php if(isset($message2)): ?>
+    <div class="alert alert-success text-center" role="alert"><?= $message2 ?></div>
+  <?php endif; ?>
 
   <h1>
     <?= h($event->getName()); ?>
