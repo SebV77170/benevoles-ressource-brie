@@ -86,8 +86,38 @@ if (isset($_POST['modify'])):
     endif;
 endif;
 
+$sqlDate = normalizeDateToSqlFormat($data['date']) ?? (new \DateTime())->format('Y-m-d');
+$eventIdInDay = $event->getIdInDay();
+$allCreneauxOnDay = $Creneau->getEventsBetween(new \DateTime($sqlDate), new \DateTime($sqlDate), 1);
+$creneauOnDay = array_values(array_filter($allCreneauxOnDay, function (array $creneau) use ($eventIdInDay): bool {
+    return $eventIdInDay !== null && (int) $creneau['id_in_day'] === $eventIdInDay;
+}));
+
+if (empty($creneauOnDay)) {
+    $eventStart = $event->getStart();
+    $eventEnd = $event->getEnd();
+    $creneauOnDay = array_values(array_filter($allCreneauxOnDay, function (array $creneau) use ($eventStart, $eventEnd): bool {
+        $creneauStart = new \DateTime($creneau['start']);
+        $creneauEnd = new \DateTime($creneau['end']);
+
+        return $creneauStart >= $eventStart && $creneauEnd <= $eventEnd;
+    }));
+}
+
+$useGlobalCreneau = empty($creneauOnDay);
+
+if ($useGlobalCreneau) {
+    $creneauOnDay = [[
+        'id' => $event->getId(),
+        'start' => $event->getStart()->format('Y-m-d H:i:s'),
+        'end' => $event->getEnd()->format('Y-m-d H:i:s'),
+        'id_in_day' => $eventIdInDay,
+        'cat_creneau' => $event->getCatCreneau(),
+    ]];
+}
+
 if (isset($_POST['insert'])):
-      $insertion = $users->insertCreneauUser($_POST['id_event']);
+      $insertion = $users->insertCreneauUser($_POST['id_event'] ?? []);
     if($insertion == 0):
         $message1 = 'Veuillez insérer au moins un créneau svp.';
     else:
@@ -95,8 +125,6 @@ if (isset($_POST['insert'])):
     endif;   
 endif;
 
-$sqlDate = normalizeDateToSqlFormat($data['date']) ?? (new \DateTime())->format('Y-m-d');
-$creneauOnDay = $Creneau->getEventsBetween(new \DateTime($sqlDate), new \DateTime($sqlDate), 1);
 $usersByCreneau = $users->getAllUsersByCreneau($creneauOnDay);
 
 
@@ -105,6 +133,14 @@ entete($data['date'],'Consulter et s\'inscrire','1');
 ?>
 
 <div class="container">
+
+  <?php if(isset($message1)): ?>
+    <div class="alert alert-danger text-center" role="alert"><?= $message1 ?></div>
+  <?php endif; ?>
+
+  <?php if(isset($message2)): ?>
+    <div class="alert alert-success text-center" role="alert"><?= $message2 ?></div>
+  <?php endif; ?>
 
   <h1>
     <?= h($event->getName()); ?>
@@ -127,7 +163,7 @@ entete($data['date'],'Consulter et s\'inscrire','1');
       if($users -> checkIfCreneauExist($v['id'])){
     ?>
       <div class="form-check form-check-inline">
-      <input class="form-check-input" name="id_event[]" type="checkbox" id="inlineCheckbox1" value="<?=$v['id']?>" disabled>
+      <input class="form-check-input" name="id_event[]" type="checkbox" id="inlineCheckbox1" value="<?=$v['id']?>" <?= $useGlobalCreneau ? 'checked' : '' ?> disabled>
       <label class="form-check-label" for="inlineCheckbox1">
       <?php echo ($Creneau -> explodeHeureInDb($v['start']));
       echo '-';
@@ -140,7 +176,7 @@ entete($data['date'],'Consulter et s\'inscrire','1');
     ?>
     
     <div class="form-check form-check-inline">
-      <input class="form-check-input" name="id_event[]" type="checkbox" id="inlineCheckbox1" value="<?=$v['id']?>" >
+      <input class="form-check-input" name="id_event[]" type="checkbox" id="inlineCheckbox1" value="<?=$v['id']?>" <?= $useGlobalCreneau ? 'checked' : '' ?> >
       <label class="form-check-label" for="inlineCheckbox1">
       <?php echo ($Creneau -> explodeHeureInDb($v['start']));
       echo '-';
@@ -217,5 +253,5 @@ entete($data['date'],'Consulter et s\'inscrire','1');
     
 </div>
 <?php
-include('includes/footer.php');
+include('../includes/footer.php');
 ?>

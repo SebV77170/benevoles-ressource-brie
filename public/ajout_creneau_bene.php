@@ -25,7 +25,7 @@ if(isset($admin)):
     $data = $data[0];
     $benevole = new App\Users($data,$pdo);
     
-    $insertion = $benevole->insertCreneauUser($_POST['id_event']);
+    $insertion = $benevole->insertCreneauUser($_POST['id_event'] ?? []);
     $creneauUser = $benevole -> getCreneauUser();
     if($insertion == 0){
         $message1 = 'Veuillez insérer au moins un créneau svp.';
@@ -38,7 +38,7 @@ if(isset($admin)):
     $data=$admin->getOneUser($_GET['id']);
     $data = $data[0];
     $benevole = new App\Users($data,$pdo);
-    $insertion = $benevole->deleteCreneauUser($_POST['id']);
+    $insertion = $benevole->deleteCreneauUser($_POST['id'] ?? []);
     $creneauUser = $benevole -> getCreneauUser();
     if($insertion == 0){
         $message3 = 'Veuillez sélectionner au moins un créneau svp.';
