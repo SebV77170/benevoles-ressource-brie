@@ -55,24 +55,31 @@
 {
   color: red;
   font-weight: 700;
-} 
+}
 </style>
 <?php
 include_once("../actions/db.php");
 include_once("../src/App/Users.php");
 
-$email='';
-if(isset($_REQUEST['pwdrst']))
+$email = '';
+if (isset($_REQUEST['pwdrst']))
 { 
-  $email=($_REQUEST['email']);
-  $pseudo = $_REQUEST['pseudo'];
-  $check_pseudo = $db->prepare("SELECT pseudo FROM users WHERE pseudo='$pseudo'");
-  $check_pseudo->execute();
-  $Pseudoinfo=$check_pseudo->fetch();
+  $email = trim($_REQUEST['email'] ?? '');
+  $pseudo = trim($_REQUEST['pseudo'] ?? '');
+
+  if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $msg = "Veuillez saisir une adresse e-mail valide";
+  } else {
+  $check_pseudo = $db->prepare("SELECT pseudo, mail FROM users WHERE pseudo = :pseudo AND mail = :email");
+  $check_pseudo->execute([
+    ':pseudo' => $pseudo,
+    ':email' => $email,
+  ]);
+  $Pseudoinfo = $check_pseudo->fetch();
 
 
 
-  if ($Pseudoinfo > 0) {
+  if ($Pseudoinfo) {
     if ($_SERVER["HTTP_HOST"] == 'localhost:8888') {
         $url = 'http://localhost:8888/benevoles-ressource-brie/reset-password.php?secret=' . urlencode(base64_encode($pseudo));
     } else {
@@ -92,38 +99,49 @@ if(isset($_REQUEST['pwdrst']))
       </p>
       <br>
     </div>';
-}
-
 include_once ("../PHPMailer/src/Exception.php");
 include_once("../PHPMailer/src/PHPMailer.php");
 include_once("../PHPMailer/src/SMTP.php");
-$email = $email; 
-$mail = new PHPMailer\PHPMailer\PHPMailer();//true
-$mail->IsSMTP();
-//$mail->SMTPDebug = 2;
-$mail->SMTPAuth = true;                 
-$mail->SMTPSecure = "ssl";  //ssl    
-$mail->Host='smtp.ouvaton.coop';
-$mail->Port = 465; 
-$mail->Username = 'president@ressourcebrie.fr';   //Entrez votre email
-$mail->Password = 'President7#';   //Entrez votre mot de passe
-$mail->FromName = "ressourcebrie";
-$mail->From='president@ressourcebrie.fr'; //Re-entrez votre email
-$mail->AddAddress($email);
+$smtpHost = $_ENV['MAIL_HOST'] ?? 'smtp.gmail.com';
+$smtpPort = (int)($_ENV['MAIL_PORT'] ?? 465);
+$smtpSecure = $_ENV['MAIL_ENCRYPTION'] ?? 'ssl';
+$smtpUser = $_ENV['MAIL_USERNAME'] ?? '';
+$smtpPassword = $_ENV['MAIL_PASSWORD'] ?? '';
+$fromAddress = $_ENV['MAIL_FROM_ADDRESS'] ?? $smtpUser;
+$fromName = $_ENV['MAIL_FROM_NAME'] ?? 'ressourcebrie';
+
+if ($smtpUser === '' || $smtpPassword === '' || $fromAddress === '') {
+  $msg = "La configuration d'envoi d'e-mail est incomplète";
+} else {
+  try {
+    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+    $mail->isSMTP();
+    $mail->SMTPAuth = true;
+    $mail->SMTPSecure = $smtpSecure;
+    $mail->Host = $smtpHost;
+    $mail->Port = $smtpPort;
+    $mail->Username = $smtpUser;
+    $mail->Password = $smtpPassword;
+    $mail->CharSet = 'UTF-8';
+    $mail->setFrom($fromAddress, $fromName);
+    $mail->addAddress($email);
 $mail->Subject = "Réinitialisation du Mot de passe";
-$mail->isHTML( TRUE );
-$mail->Body =$message;
-if($mail->send())
-{
+    $mail->isHTML(true);
+    $mail->Body = $message;
+    $mail->send();
   $msg = "Nous avons envoyé un lien de réinitialisation de votre mot de passe par e-mail!";
+  } catch (PHPMailer\PHPMailer\Exception $e) {
+    error_log('Erreur envoi e-mail mot de passe oublie : ' . ($mail->ErrorInfo ?: $e->getMessage()));
+    $msg = "Erreur lors de l'envoi de l'e-mail de réinitialisation";
+  }
 }
 }
 else
 {
   $msg = "Nous ne trouvons pas d'utilisateur avec cette pseudo";
 }
-
-
+}
+}
 ?>
 <body>
 <div class="container">  
