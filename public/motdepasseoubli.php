@@ -59,21 +59,35 @@
 </style>
 <?php
 include_once("../actions/db.php");
-include_once("../src/App/Users.php");
 
+function normalizePseudo(string $pseudo): string
+{
+  $pseudo = mb_strtolower(trim($pseudo), 'UTF-8');
+  $translit = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $pseudo);
+
+  if ($translit !== false) {
+    $pseudo = $translit;
+  }
+
+  return preg_replace('/[^a-z0-9]/', '', $pseudo) ?? '';
+}
+
+$pseudo = '';
 $email = '';
 if (isset($_REQUEST['pwdrst']))
 { 
-  $email = trim($_REQUEST['email'] ?? '');
   $pseudo = trim($_REQUEST['pseudo'] ?? '');
+  $email = trim($_REQUEST['email'] ?? '');
+  $pseudoNormalise = normalizePseudo($pseudo);
 
-  if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+  if ($pseudoNormalise === '') {
+    $msg = "Veuillez saisir votre pseudo";
+  } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $msg = "Veuillez saisir une adresse e-mail valide";
   } else {
-  $check_pseudo = $db->prepare("SELECT pseudo, mail FROM users WHERE pseudo = :pseudo AND mail = :email");
+  $check_pseudo = $db->prepare("SELECT pseudo_normalise FROM users WHERE pseudo_normalise = :pseudo_normalise");
   $check_pseudo->execute([
-    ':pseudo' => $pseudo,
-    ':email' => $email,
+    ':pseudo_normalise' => $pseudoNormalise,
   ]);
   $Pseudoinfo = $check_pseudo->fetch();
 
@@ -81,9 +95,9 @@ if (isset($_REQUEST['pwdrst']))
 
   if ($Pseudoinfo) {
     if ($_SERVER["HTTP_HOST"] == 'localhost:8888') {
-        $url = 'http://localhost:8888/benevoles-ressource-brie/reset-password.php?secret=' . urlencode(base64_encode($pseudo));
+        $url = 'http://localhost:8888/benevoles-ressource-brie/reset-password.php?secret=' . urlencode(base64_encode($Pseudoinfo['pseudo_normalise']));
     } else {
-        $url = 'https://benevoles.ressourcebrie.fr/reset-password.php?secret=' . urlencode(base64_encode($pseudo));
+        $url = 'https://benevoles.ressourcebrie.fr/reset-password.php?secret=' . urlencode(base64_encode($Pseudoinfo['pseudo_normalise']));
     }
 
     $message = '
@@ -138,7 +152,7 @@ $mail->Subject = "Réinitialisation du Mot de passe";
 }
 else
 {
-  $msg = "Nous ne trouvons pas d'utilisateur avec cette pseudo";
+  $msg = "Nous ne trouvons pas d'utilisateur avec ce pseudo";
 }
 }
 }
@@ -151,12 +165,13 @@ else
      <form id="validate_form" method="post" >  
        <div class="form-group">
        <label for="pseudo">Pseudo </label>
-       <input type="text" name="pseudo" id="pseudo" placeholder="Entrer votre pseudo" required data-parsley-type="email" data-parsley-trigg
-       er="keyup" class="form-control" /> 
+       <input type="text" name="pseudo" id="pseudo" placeholder="Entrer votre pseudo"
+       value="<?php echo htmlspecialchars($pseudo, ENT_QUOTES, 'UTF-8'); ?>" required
+       data-parsley-trigger="keyup" class="form-control" />
        <label for="email">Email </label>
-       <input type="text" name="email" id="email" placeholder="Entrer votre email" required 
-       data-parsley-type="email" data-parsley-trigg
-       er="keyup" class="form-control" />
+       <input type="email" name="email" id="email" placeholder="Entrer votre email"
+       value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>" required
+       data-parsley-type="email" data-parsley-trigger="keyup" class="form-control" />
       </div>
       <div class="form-group">
        <input type="submit" id="login" name="pwdrst" value="Envoyer le lien de réinitialisation du mot de passe" class="btn btn-success" />

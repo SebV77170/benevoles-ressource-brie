@@ -60,33 +60,24 @@
 <?php
 include_once('../actions/db.php');
 
-/*function debug_to_console($data) {
-  $output = $data;
-  if (is_array($output))
-      $output = implode(',', $output);
-
-  echo "<script>console.log('Debug Objects: " . $output . "' );</script>";
-}*/
-
+$secret = $_GET['secret'] ?? '';
+$pseudoNormalise = base64_decode($secret, true);
+$pseudoNormalise = is_string($pseudoNormalise) ? $pseudoNormalise : '';
 
 if(isset($_REQUEST['pwdrst']))
 {
-  $email = base64_decode($_GET['secret']);
   $pwd = password_hash($_REQUEST['pwd'], PASSWORD_DEFAULT);
   $cpwd = $_REQUEST['cpwd'];
 
-
-  //debug_to_console(  ' ' . $email);
-
   if(password_verify($cpwd,$pwd))
   {
-    $query="UPDATE users SET password='$pwd' WHERE pseudo='$email'";
-    $reset_pwd = $db->prepare($query);
-    $reset_pwd->execute();
+    $reset_pwd = $db->prepare("UPDATE users SET password = :password WHERE pseudo_normalise = :pseudo_normalise");
+    $reset_pwd->execute([
+      ':password' => $pwd,
+      ':pseudo_normalise' => $pseudoNormalise,
+    ]);
   
-    //debug_to_console(  ' ' . $pwd);
-  
-    if($reset_pwd)
+    if($reset_pwd->rowCount() > 0)
     {
       $msg1= 'Votre mot de passe a été modifié avec succès <a href="login.php"> Cliquez ici</a> pour se connecter';
     }
@@ -101,14 +92,15 @@ if(isset($_REQUEST['pwdrst']))
   }
 }
 
-if($_GET['secret'])
+if($pseudoNormalise !== '')
 {
-  $email = base64_decode($_GET['secret']);
-  $check_details = $db->prepare("SELECT mail FROM users WHERE pseudo='$email'");
-  $check_details->execute();
+  $check_details = $db->prepare("SELECT 1 FROM users WHERE pseudo_normalise = :pseudo_normalise");
+  $check_details->execute([
+    ':pseudo_normalise' => $pseudoNormalise,
+  ]);
   $res = $check_details->fetch();
 
-  if($res>0)
+  if($res)
   {?>
   
 
@@ -118,7 +110,6 @@ if($_GET['secret'])
     <div class="table-responsive">  
     <h3 align="center">Réinitialisation du Mot de passe</h3><br/>
      <form id="validate_form" method="post" >  
-      <input type="hidden" name="email" value="<?php echo $email; ?>"/>
       <div class="form-group">
        <label for="pwd">Mot de passe</label>
        <input type="password" name="pwd" id="pwd" placeholder="Entrer votre nouveau mot de passe" required 
