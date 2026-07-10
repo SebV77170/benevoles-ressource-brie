@@ -25,7 +25,7 @@ entete('Calendrier','Calendrier des créneaux','1');
 
 <div class="calendar">
 
-  <div class="d-flex flex-row align-items-center justify-content-between mx-sm-3">
+  <div class="calendar__topbar d-flex flex-row align-items-center justify-content-between mx-sm-3">
     <h1><?= $month->toString(); ?></h1>
 
     <?php if (isset($_GET['success'])): ?>
@@ -36,9 +36,17 @@ entete('Calendrier','Calendrier des créneaux','1');
       </div>
     <?php endif; ?>
 
-    <div>
-      <a href="calendrier.php?month=<?= $month->previousMonth()->month; ?>&year=<?= $month->previousMonth()->year; ?>" class="btn btn-primary">&lt;</a>
-      <a href="calendrier.php?month=<?= $month->nextMonth()->month; ?>&year=<?= $month->nextMonth()->year; ?>" class="btn btn-primary">&gt;</a>
+    <div class="calendar__nav">
+      <a href="calendrier.php?month=<?= $month->previousMonth()->month; ?>&year=<?= $month->previousMonth()->year; ?>" class="btn btn-primary calendar__nav-desktop-btn">&lt;</a>
+      <a href="calendrier.php?month=<?= $month->nextMonth()->month; ?>&year=<?= $month->nextMonth()->year; ?>" class="btn btn-primary calendar__nav-desktop-btn">&gt;</a>
+      <details class="calendar__nav-dropdown">
+        <summary class="btn btn-primary">Navigation</summary>
+        <div class="calendar__nav-menu">
+          <a href="calendrier.php?month=<?= $month->previousMonth()->month; ?>&year=<?= $month->previousMonth()->year; ?>" class="btn btn-outline-primary btn-sm">Mois précédent</a>
+          <a href="calendrier.php" class="btn btn-outline-primary btn-sm">Mois actuel</a>
+          <a href="calendrier.php?month=<?= $month->nextMonth()->month; ?>&year=<?= $month->nextMonth()->year; ?>" class="btn btn-outline-primary btn-sm">Mois suivant</a>
+        </div>
+      </details>
     </div>
   </div>
 
